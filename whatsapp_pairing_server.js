@@ -207,6 +207,30 @@ async function pushOrderToCloud(newOrder) {
 }
 
 // Función para verificar si el local está ABIERTO según el reloj oficial o el control manual del Panel Admin
+function getSpainTimeData() {
+  try {
+    const options = { timeZone: 'Europe/Madrid', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(new Date());
+    let year, month, dayVal, hourVal = 0, minuteVal = 0;
+    for (const part of parts) {
+      if (part.type === 'year') year = parseInt(part.value, 10);
+      if (part.type === 'month') month = parseInt(part.value, 10) - 1;
+      if (part.type === 'day') dayVal = parseInt(part.value, 10);
+      if (part.type === 'hour') hourVal = parseInt(part.value, 10);
+      if (part.type === 'minute') minuteVal = parseInt(part.value, 10);
+    }
+    const spainDate = new Date(year, month, dayVal, hourVal, minuteVal);
+    return {
+      day: spainDate.getDay(),
+      hour: hourVal === 24 ? 0 : hourVal
+    };
+  } catch(e) {
+    const now = new Date();
+    return { day: now.getDay(), hour: now.getHours() };
+  }
+}
+
 function checkIsWithinBusinessHours() {
   try {
     const localPath = path.join(process.cwd(), 'public', 'cloud_orders.json');
@@ -219,9 +243,7 @@ function checkIsWithinBusinessHours() {
     }
   } catch (e) {}
 
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
-  const hour = now.getHours();
+  const { day, hour } = getSpainTimeData();
 
   if (day === 1) return false; // Lunes cerrado por descanso
 
