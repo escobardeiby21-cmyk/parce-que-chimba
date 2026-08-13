@@ -992,20 +992,14 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     settleDriverPayout(driverName);
   };
 
-  // Función para autenticar al dueño (acepta 2528, 1234 o cualquier intento del dueño)
+  // Función para autenticar al dueño (acepta PIN 2528 o cualquier intento)
   const handlePinSubmit = (e) => {
     if (e) e.preventDefault();
-    const pin = adminPinInput.trim();
-    if (pin === '2528' || pin === '1234' || pin.length >= 3) {
-      setIsAdminAuthenticated(true);
-      localStorage.setItem('pq_chimba_admin_auth', 'true');
-      setAdminPinInput('');
-    } else {
-      // Auto-ingreso de respaldo
-      setIsAdminAuthenticated(true);
-      localStorage.setItem('pq_chimba_admin_auth', 'true');
-      setAdminPinInput('');
-    }
+    setIsAdminAuthenticated(true);
+    localStorage.setItem('pq_chimba_admin_auth', 'true');
+    setAdminPinInput('');
+    setIsAdminOpen(true);
+    setActiveView('admin');
   };
 
   // Función para exportar contabilidad a CSV (Excel)
