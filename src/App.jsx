@@ -80,6 +80,18 @@ const getSpainTimeData = () => {
   }
 };
 
+// Helper para formatear direcciones y generar enlace de Google Maps GPS
+const formatOrderAddressAndMaps = (address = '') => {
+  if (!address) return { text: 'Dirección no especificada', mapsUrl: null };
+  const strAddr = String(address);
+  let mapsUrl = null;
+  const match = strAddr.match(/https?:\/\/[^\s]+/);
+  if (match) {
+    mapsUrl = match[0];
+  }
+  return { text: strAddr, mapsUrl };
+};
+
 function App() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -1738,12 +1750,16 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                                            <div className="text-gray-300 text-xs bg-black/60 p-3 rounded-xl border border-gray-800 space-y-1.5">
                                              <span className="text-xs text-yellow-400 font-black uppercase block border-b border-gray-800 pb-1">🍔 Comida Pedida:</span>
                                              <div className="space-y-1">
-                                               {o.items.map((i, idx) => (
-                                                 <div key={idx} className="flex justify-between items-center">
-                                                   <span className="font-medium"><strong className="text-yellow-400 text-sm">{i.quantity}x</strong> {i.name}</span>
-                                                   <span className="font-mono text-gray-300 font-bold">{(i.price * i.quantity).toFixed(2)}€</span>
-                                                 </div>
-                                               ))}
+                                               {(Array.isArray(o.items) ? o.items : []).map((i, idx) => {
+                                                 const qty = i.quantity || 1;
+                                                 const price = i.price || 0;
+                                                 return (
+                                                   <div key={idx} className="flex justify-between items-center">
+                                                     <span className="font-medium"><strong className="text-yellow-400 text-sm">{qty}x</strong> {i.name}</span>
+                                                     <span className="font-mono text-gray-300 font-bold">{(price * qty).toFixed(2)}€</span>
+                                                   </div>
+                                                 );
+                                               })}
                                              </div>
                                              {o.notes && (
                                                <div className="pt-1.5 mt-1.5 border-t border-gray-800 text-xs text-amber-300 italic font-medium">
