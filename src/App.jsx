@@ -80,7 +80,7 @@ const getSpainTimeData = () => {
   }
 };
 
-// Helper para formatear direcciones y generar enlace de Google Maps GPS
+// Helper para formatear direcciones y generar enlace de Google Maps GPS de forma limpia
 const formatOrderAddressAndMaps = (address = '') => {
   if (!address) return { text: 'Dirección no especificada', mapsUrl: null };
   const strAddr = String(address);
@@ -89,7 +89,19 @@ const formatOrderAddressAndMaps = (address = '') => {
   if (match) {
     mapsUrl = match[0];
   }
-  return { text: strAddr, mapsUrl };
+
+  let text = strAddr;
+  if (mapsUrl) {
+    // Si la dirección incluye una URL de Google Maps, limpiar el texto para no saturar la tarjeta
+    text = strAddr.replace(mapsUrl, '').replace(/📍/g, '').replace(/Ubicación GPS:?/gi, '').trim();
+    if (!text || text === ':') {
+      text = 'Ubicación GPS enviada por el cliente';
+    } else {
+      text = `📍 ${text}`;
+    }
+  }
+
+  return { text, mapsUrl };
 };
 
 function App() {
@@ -1747,25 +1759,46 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                                            </div>
                                            
                                            {/* Lista detallada de Platos */}
-                                           <div className="text-gray-300 text-xs bg-black/60 p-3 rounded-xl border border-gray-800 space-y-1.5">
-                                             <span className="text-xs text-yellow-400 font-black uppercase block border-b border-gray-800 pb-1">🍔 Comida Pedida:</span>
-                                             <div className="space-y-1">
+                                           <div className="text-gray-300 text-xs bg-black/60 p-3 rounded-xl border border-gray-800 space-y-2">
+                                             <span className="text-xs text-yellow-400 font-black uppercase block border-b border-gray-800 pb-1">🍔 Detalle de la Comida Pedida:</span>
+                                             <div className="space-y-1.5">
                                                {(Array.isArray(o.items) ? o.items : []).map((i, idx) => {
                                                  const qty = i.quantity || 1;
                                                  const price = i.price || 0;
                                                  return (
-                                                   <div key={idx} className="flex justify-between items-center">
-                                                     <span className="font-medium"><strong className="text-yellow-400 text-sm">{qty}x</strong> {i.name}</span>
-                                                     <span className="font-mono text-gray-300 font-bold">{(price * qty).toFixed(2)}€</span>
+                                                   <div key={idx} className="space-y-0.5 border-b border-gray-800/40 pb-1 last:border-0 last:pb-0">
+                                                     <div className="flex justify-between items-center">
+                                                       <span className="font-bold text-white text-xs"><strong className="text-yellow-400 text-sm mr-1">{qty}x</strong> {i.name}</span>
+                                                       <span className="font-mono text-amber-300 font-bold">{(price * qty).toFixed(2)}€</span>
+                                                     </div>
+                                                     {i.desc && (
+                                                       <div className="text-[11px] text-amber-200/90 pl-5 font-medium italic">
+                                                         └ {i.desc}
+                                                       </div>
+                                                     )}
                                                    </div>
                                                  );
                                                })}
                                              </div>
                                              {o.notes && (
-                                               <div className="pt-1.5 mt-1.5 border-t border-gray-800 text-xs text-amber-300 italic font-medium">
-                                                 📝 <strong>Notas del cliente:</strong> {o.notes}
+                                               <div className="pt-2 mt-1 border-t border-gray-800 text-xs text-amber-300 italic font-medium bg-amber-950/30 p-2 rounded-lg border border-amber-800/40">
+                                                 📝 <strong>Notas / Indicaciones del cliente:</strong> {o.notes}
                                                </div>
                                              )}
+
+                                             {/* Desglose de Precios y Botón de Ticket */}
+                                             <div className="pt-2 border-t border-gray-800 flex justify-between items-center text-[11px] text-gray-400 font-bold flex-wrap gap-2">
+                                               <div>
+                                                 <span>Subtotal: {((o.subtotal || (o.total - (o.deliveryFee || 2.0)))).toFixed(2)}€ + Envío: {(o.deliveryFee || 2.0).toFixed(2)}€</span>
+                                               </div>
+                                               <button 
+                                                 type="button" 
+                                                 onClick={() => setPrintableTicket(o)} 
+                                                 className="bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 px-2.5 py-1 rounded-lg border border-amber-500/40 font-black text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow"
+                                               >
+                                                 <span>📋</span> Ver Ticket Completo
+                                               </button>
+                                             </div>
                                            </div>
                                          </div>
                                        );
