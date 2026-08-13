@@ -1556,31 +1556,20 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
               <form onSubmit={handlePinSubmit} className="py-8 flex flex-col items-center justify-center">
                 <span className="text-5xl mb-4">🔒</span>
                 <h3 className="text-lg font-bold text-white mb-2">Acceso de Administración</h3>
-                <p className="text-xs text-gray-400 mb-6 text-center">Ingresa tu clave de administración (2528) para acceder al panel de ventas.</p>
-                
-                <input 
-                  type="password" 
+                <p className="text-xs text-gray-400 mb-6 text-center">Ingresa tu clave de administración para acceder al panel de ventas.</p>
+
+                <input
+                  type="password"
                   maxLength={6}
-                  value={adminPinInput} 
-                  onChange={e => setAdminPinInput(e.target.value)} 
-                  placeholder="2528"
+                  value={adminPinInput}
+                  onChange={e => setAdminPinInput(e.target.value)}
+                  placeholder="••••"
                   className="w-44 bg-black border-2 border-[var(--color-brand-orange)] rounded-2xl p-4 text-center text-3xl tracking-widest text-white mb-6 outline-none shadow-[0_0_20px_rgba(255,107,0,0.3)]"
                   autoFocus
                 />
-                
-                <button type="submit" className="w-full bg-gradient-to-r from-[var(--color-brand-orange)] to-[var(--color-brand-yellow)] text-black font-black py-3.5 rounded-xl shadow-lg cursor-pointer">
-                  Ingresar con PIN 2528
-                </button>
 
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setIsAdminAuthenticated(true);
-                    localStorage.setItem('pq_chimba_admin_auth', 'true');
-                  }}
-                  className="mt-3 text-xs text-amber-400 underline font-bold cursor-pointer"
-                >
-                  ⚡ Acceso Directo de Propietario (Entrar sin Clave)
+                <button type="submit" className="w-full bg-gradient-to-r from-[var(--color-brand-orange)] to-[var(--color-brand-yellow)] text-black font-black py-3.5 rounded-xl shadow-lg cursor-pointer hover:opacity-90 transition-opacity">
+                  Ingresar al Panel
                 </button>
               </form>
             ) : (
