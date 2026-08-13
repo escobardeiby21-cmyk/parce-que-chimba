@@ -43,6 +43,43 @@ const BackgroundParticles = () => {
   );
 };
 
+// Safe JSON Parse Helper to prevent uncaught localStorage syntax errors
+const safeJsonParse = (key, fallback = null) => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved || saved === 'undefined' || saved === 'null') return fallback;
+    return JSON.parse(saved);
+  } catch (e) {
+    return fallback;
+  }
+};
+
+// Helper para obtener la hora y día exacto de España (Europe/Madrid), sin importar la hora del PC del usuario
+const getSpainTimeData = () => {
+  try {
+    const options = { timeZone: 'Europe/Madrid', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
+    const formatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = formatter.formatToParts(new Date());
+    let year, month, dayVal, hourVal = 0, minuteVal = 0;
+    for (const part of parts) {
+      if (part.type === 'year') year = parseInt(part.value, 10);
+      if (part.type === 'month') month = parseInt(part.value, 10) - 1;
+      if (part.type === 'day') dayVal = parseInt(part.value, 10);
+      if (part.type === 'hour') hourVal = parseInt(part.value, 10);
+      if (part.type === 'minute') minuteVal = parseInt(part.value, 10);
+    }
+    const spainDate = new Date(year, month, dayVal, hourVal, minuteVal);
+    return {
+      day: spainDate.getDay(),
+      hours: hourVal === 24 ? 0 : hourVal,
+      minutes: minuteVal
+    };
+  } catch(e) {
+    const now = new Date();
+    return { day: now.getDay(), hours: now.getHours(), minutes: now.getMinutes() };
+  }
+};
+
 function App() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -61,17 +98,6 @@ function App() {
   const [adminPinInput, setAdminPinInput] = useState('');
   const [driverPinInput, setDriverPinInput] = useState('');
   
-  // Safe JSON Parse Helper to prevent uncaught localStorage syntax errors
-  const safeJsonParse = (key, fallback = null) => {
-    try {
-      const saved = localStorage.getItem(key);
-      if (!saved || saved === 'undefined' || saved === 'null') return fallback;
-      return JSON.parse(saved);
-    } catch (e) {
-      return fallback;
-    }
-  };
-
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     try {
       return localStorage.getItem('pq_chimba_admin_auth') === 'true';
@@ -94,36 +120,6 @@ function App() {
   // Modal de Detalle de Domicilios por Liquidar / Liquidados
   const [payoutDetailModal, setPayoutDetailModal] = useState(null); // { driverName, filterType: 'pending'|'settled' }
   const [printableTicket, setPrintableTicket] = useState(null);
-
-  // Función que calcula si el negocio está abierto según los Horarios Oficiales:
-  // - Lunes: Cerrado por descanso
-  // - Mar a Jue: 17:00 hs - 00:00 hs (Medianoche)
-  // - Vie a Dom: 17:00 hs - 03:00 hs (Madrugada del día siguiente)
-  // Helper para obtener la hora y día exacto de España (Europe/Madrid), sin importar la hora del PC del usuario
-  const getSpainTimeData = () => {
-    try {
-      const options = { timeZone: 'Europe/Madrid', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: false };
-      const formatter = new Intl.DateTimeFormat('en-US', options);
-      const parts = formatter.formatToParts(new Date());
-      let year, month, dayVal, hourVal = 0, minuteVal = 0;
-      for (const part of parts) {
-        if (part.type === 'year') year = parseInt(part.value, 10);
-        if (part.type === 'month') month = parseInt(part.value, 10) - 1;
-        if (part.type === 'day') dayVal = parseInt(part.value, 10);
-        if (part.type === 'hour') hourVal = parseInt(part.value, 10);
-        if (part.type === 'minute') minuteVal = parseInt(part.value, 10);
-      }
-      const spainDate = new Date(year, month, dayVal, hourVal, minuteVal);
-      return {
-        day: spainDate.getDay(),
-        hours: hourVal === 24 ? 0 : hourVal,
-        minutes: minuteVal
-      };
-    } catch(e) {
-      const now = new Date();
-      return { day: now.getDay(), hours: now.getHours(), minutes: now.getMinutes() };
-    }
-  };
 
   // Función que calcula si el negocio está abierto según la Hora Oficial de España (Europe/Madrid)
   const checkIsWithinBusinessHours = () => {
