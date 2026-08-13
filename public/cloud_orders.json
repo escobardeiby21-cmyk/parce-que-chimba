@@ -71,34 +71,6 @@
       "timestamp": "2026-08-13T18:19:55.991Z",
       "dateStr": "13/8/2026",
       "isoDateStr": "2026-08-13"
-    },
-    {
-      "id": "WPP-5523",
-      "source": "WhatsApp AI Bot 🤖",
-      "clientName": "Cristiano Ronaldo",
-      "phone": "+34 418400848",
-      "address": "🏠 Las peñas 5",
-      "paymentMethod": "Efectivo",
-      "items": [
-        {
-          "name": "Hamburguesa Clásica",
-          "price": 6,
-          "desc": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
-        },
-        {
-          "name": "Postobón Colombiana",
-          "price": 2.5
-        }
-      ],
-      "subtotal": 8.5,
-      "deliveryFee": 2,
-      "total": 10.5,
-      "status": "En Preparación",
-      "assignedDriver": null,
-      "notes": "Sin cambios ni notas especiales",
-      "timestamp": "2026-08-13T18:45:51.735Z",
-      "dateStr": "13/8/2026",
-      "isoDateStr": "2026-08-13"
     }
   ],
   "isOpen": true

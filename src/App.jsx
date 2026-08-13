@@ -631,11 +631,13 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
         if (data && typeof data === 'object') {
           // COMBINAR pedidos locales con pedidos remotos por ID para que NUNCA se borren por error de red
           if (Array.isArray(data.orders)) {
-            const localOrders = safeJsonParse('pq_chimba_orders', []);
+            const deletedIds = new Set(safeJsonParse('pq_chimba_deleted_ids', []));
+            const validCloudOrders = data.orders.filter(o => o && o.id && !deletedIds.has(o.id));
+            const localOrders = safeJsonParse('pq_chimba_orders', []).filter(o => o && o.id && !deletedIds.has(o.id));
             const mergedMap = new Map();
 
-            // Insertar pedidos remotos primero
-            data.orders.forEach(o => { if (o && o.id) mergedMap.set(o.id, o); });
+            // Insertar pedidos remotos primero (excluyendo eliminados)
+            validCloudOrders.forEach(o => { if (o && o.id) mergedMap.set(o.id, o); });
             // Preservar pedidos locales que no estén en remoto
             localOrders.forEach(o => { if (o && o.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o); });
 
