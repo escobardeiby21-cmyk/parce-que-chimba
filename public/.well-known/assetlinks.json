@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.parcequechimba.twa",
+    "sha256_cert_fingerprints": ["FC:5A:F5:54:09:02:D7:B7:1C:7B:1F:9D:E3:C1:E9:16:D1:B7:1C:3F:6A:2B:B9:BF:54:AA:66:7B:61:48:AA:97"]
+  }
+}]
