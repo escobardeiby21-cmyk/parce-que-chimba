@@ -704,8 +704,58 @@ client.on('message', async (msg) => {
       return;
     }
 
-    let userText = msg.body;
+    let userText = msg.body || '';
     console.log(`📩 Mensaje de WhatsApp recibido de ${msg.from}: ${userText || '[Audio / Ubicación]'}`);
+
+    // DETECTAR PEDIDOS FORMATEADOS PROCEDENTES DE LA PÁGINA WEB / APP PARA QUE EL CHATBOT NO SE CONFUNDA
+    if (userText.includes('Quiero hacer un pedido') || userText.includes('Mis Datos:') || userText.includes('Mi Pedido:') || userText.includes('Total a pagar:')) {
+      const nameMatch = userText.match(/Nombre:\s*([^\n]+)/i);
+      const addressMatch = userText.match(/Dirección:\s*([^\n]+)/i);
+      const phoneMatch = userText.match(/Teléfono:\s*([^\n]+)/i);
+      const totalMatch = userText.match(/Total a pagar:\s*([\d\.,]+)/i);
+      const notesMatch = userText.match(/Notas:\s*([^\n]+)/i);
+
+      const clientName = nameMatch ? nameMatch[1].trim() : (senderNotifyName || 'Cliente Web');
+      const address = addressMatch ? addressMatch[1].trim() : 'Dirección enviada en texto';
+      const phone = phoneMatch ? phoneMatch[1].trim() : msg.from.replace('@c.us', '').replace('@lid', '');
+      const totalVal = totalMatch ? parseFloat(totalMatch[1].replace(',', '.')) : 0;
+      const notes = notesMatch ? notesMatch[1].trim() : 'Pedido recibido desde la Web/App';
+
+      const orderId = 'WEB-' + Math.floor(1000 + Math.random() * 9000);
+      const now = new Date();
+
+      const webOrderObj = {
+        id: orderId,
+        source: 'Página Web / App 🌐',
+        clientName: clientName,
+        phone: phone,
+        address: `🏠 ${address}`,
+        paymentMethod: userText.toLowerCase().includes('bizum') ? 'Bizum' : 'Efectivo',
+        items: [{ name: 'Pedido Completo por Web', price: totalVal > 2 ? totalVal - 2.00 : totalVal, quantity: 1 }],
+        subtotal: totalVal > 2 ? totalVal - 2.00 : totalVal,
+        deliveryFee: 2.00,
+        total: totalVal > 0 ? totalVal : 12.00,
+        status: 'En Preparación',
+        assignedDriver: null,
+        notes: notes,
+        timestamp: now.toISOString(),
+        dateStr: now.toLocaleDateString('es-ES'),
+        isoDateStr: now.toISOString().split('T')[0]
+      };
+
+      await pushOrderToCloud(webOrderObj);
+
+      await msg.reply(`🎉 ¡Muchas gracias, ${clientName}! 🧾✨ Hemos recibido tu pedido **${orderId}** desde la Web/App.
+
+👤 **Cliente:** ${clientName}
+📍 **Dirección:** ${address}
+📱 **Teléfono:** ${phone}
+💰 **TOTAL A PAGAR:** ${webOrderObj.total.toFixed(2)}€
+
+✅ **TU PEDIDO HA SIDO ENVIADO A LA COCINA EN EL PANEL DE CONTROL EN TIEMPO REAL.**
+🛵 Tiempo estimado de entrega: **25 - 35 minutos**. ¡Quedamos a tu entero servicio! 🔥`);
+      return;
+    }
 
     if (msg.hasMedia && (msg.type === 'audio' || msg.type === 'ptt')) {
       console.log('🎙️ Procesando audio de voz...');
