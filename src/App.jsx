@@ -691,6 +691,15 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
   };
 
   useEffect(() => {
+    // Forzar actualización inmediata del Service Worker PWA para invalidar cachés viejos en cualquier dispositivo
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.update();
+        }
+      }).catch(() => {});
+    }
+
     // GARANTIZADO: La web SIEMPRE abre en la vista de Menú para el cliente
     setIsAdminOpen(false);
     setActiveView('menu');

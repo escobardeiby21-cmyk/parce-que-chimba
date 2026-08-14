@@ -10,6 +10,22 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+        navigateFallbackDenylist: [/^\/api\//, /^\/cloud_orders\.json/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/cloud_orders\.json/,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /^https?:\/\/.*\/api\/.*/,
+            handler: 'NetworkOnly'
+          }
+        ]
+      },
       manifest: {
         name: 'Que Chimba Parce',
         short_name: 'Que Chimba Parce',
