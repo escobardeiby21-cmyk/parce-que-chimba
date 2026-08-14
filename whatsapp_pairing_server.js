@@ -17,9 +17,35 @@ if (process.env.OPENAI_API_KEY) {
 
 let currentQrDataUrl = null;
 let isReady = false;
+let sseClients = [];
+
+function broadcastSSEEvent(eventType, data) {
+  const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
+  sseClients.forEach(clientRes => {
+    try {
+      clientRes.write(payload);
+    } catch(e) {}
+  });
+}
 
 // Servidor Web para la Vinculación en Tiempo Real
 const server = http.createServer(async (req, res) => {
+  // Transmisión en Tiempo Real SSE (<0.1 segundos)
+  if (req.url.includes('/api/events')) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.writeHead(200);
+
+    res.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', time: new Date().toISOString() })}\n\n`);
+    sseClients.push(res);
+
+    req.on('close', () => {
+      sseClients = sseClients.filter(c => c !== res);
+    });
+    return;
+  }
   // Ruta API para consultar, actualizar o borrar pedidos en tiempo real
   if (req.url.includes('/api/orders') || req.url.includes('/cloud_orders.json')) {
     const localPath = path.join(process.cwd(), 'public', 'cloud_orders.json');
@@ -194,7 +220,7 @@ async function pushOrderToCloud(newOrder) {
         console.log(`✅ ¡PEDIDO GUARDADO LOCALMENTE EN DISCO!: ${newOrder.id}`);
       } catch (e) {}
 
-      // 3. Enviar a Servidor Remoto /api/orders
+      // 3. Enviar a Servidor Remoto /api/orders y transmitir evento SSE en tiempo real (<0.1s)
       try {
         await fetch(REMOTE_API_URL, {
           method: 'POST',
@@ -203,6 +229,8 @@ async function pushOrderToCloud(newOrder) {
         });
         console.log(`☁️ ¡PEDIDO SINCRONIZADO EN NUBE!: ${newOrder.id}`);
       } catch (e) {}
+
+      broadcastSSEEvent('new_order', newOrder);
     }
   } catch (err) {
     console.error('❌ Error al procesar pedido de WhatsApp:', err);

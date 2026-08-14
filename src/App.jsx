@@ -144,8 +144,36 @@ function App() {
 
   // Modal de Detalle de Domicilios por Liquidar / Liquidados
   const [payoutDetailModal, setPayoutDetailModal] = useState(null); // { driverName, filterType: 'pending'|'settled' }
+  const [newOrderToast, setNewOrderToast] = useState(null);
   const [printableTicket, setPrintableTicket] = useState(null);
   const [submittedOrderModal, setSubmittedOrderModal] = useState(null);
+
+  // Reproductor de Timbre Real de Cocina 🔔 (Web Audio API - Cero dependencias externas)
+  const playKitchenBellSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+
+      const playTone = (freq, startTime, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.5, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+
+      // Tono 1: Bell Chime (880Hz - A5)
+      playTone(880, ctx.currentTime, 0.6);
+      // Tono 2: Bell Chime High (1320Hz - E6)
+      playTone(1320, ctx.currentTime + 0.15, 1.0);
+    } catch(e) {}
+  };
 
   // Función que calcula si el negocio está abierto según la Hora Oficial de España (Europe/Madrid)
   const checkIsWithinBusinessHours = () => {
@@ -728,7 +756,38 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     fetchCloudOrders();
     const interval = setInterval(fetchCloudOrders, 2000);
 
-    return () => clearInterval(interval);
+    // Conectar Suscriptores SSE en Tiempo Real (<0.1s de latencia)
+    const connectSSE = (url) => {
+      try {
+        const es = new EventSource(url);
+        es.addEventListener('new_order', (e) => {
+          try {
+            const incoming = JSON.parse(e.data);
+            if (incoming && incoming.id) {
+              setOrdersHistory(prev => {
+                if (!prev.some(o => o.id === incoming.id)) {
+                  playKitchenBellSound();
+                  setNewOrderToast(incoming);
+                  setTimeout(() => setNewOrderToast(null), 6000);
+                  return [incoming, ...prev];
+                }
+                return prev;
+              });
+            }
+          } catch(err) {}
+        });
+        return es;
+      } catch(err) { return null; }
+    };
+
+    const esLocal = connectSSE('http://localhost:3333/api/events');
+    const esRemote = connectSSE('/api/events');
+
+    return () => {
+      clearInterval(interval);
+      try { if (esLocal) esLocal.close(); } catch(e){}
+      try { if (esRemote) esRemote.close(); } catch(e){}
+    };
   }, []);
 
   // Guardar lista de repartidores en localStorage
@@ -1062,6 +1121,41 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
 
   return (
     <div className="min-h-screen pb-24 relative bg-[var(--color-brand-dark)]">
+      {/* Toast Flotante de Alerta de Pedido en Tiempo Real (<0.1s + Sonido de Timbre) */}
+      <AnimatePresence>
+        {newOrderToast && (
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -50, opacity: 0 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-sm px-4 pointer-events-none"
+          >
+            <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-black font-black p-4 rounded-2xl shadow-[0_0_40px_rgba(255,107,0,0.8)] border-2 border-yellow-300 flex items-center gap-3 pointer-events-auto">
+              <div className="w-12 h-12 bg-black text-amber-400 rounded-xl flex items-center justify-center text-2xl shrink-0 shadow animate-bounce">
+                🔔
+              </div>
+              <div className="flex-1 text-left">
+                <span className="text-[10px] bg-black text-amber-300 px-2 py-0.5 rounded-full font-black uppercase tracking-wider block w-fit mb-0.5">
+                  ⚡ ¡NUEVO PEDIDO EN TIEMPO REAL!
+                </span>
+                <p className="text-sm font-black text-black">
+                  #{newOrderToast.id} • {newOrderToast.clientName} ({newOrderToast.total.toFixed(2)}€)
+                </p>
+                <p className="text-[11px] text-black/80 font-bold truncate">
+                  📍 {formatOrderAddressAndMaps(newOrderToast.address).text}
+                </p>
+              </div>
+              <button
+                onClick={() => setNewOrderToast(null)}
+                className="text-black/80 hover:text-black font-black text-lg p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Botón Flotante Permanente de Acceso Directo al Panel Admin */}
       <div className="fixed top-3 right-3 z-[99]">
         <button
