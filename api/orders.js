@@ -1,44 +1,74 @@
 let memoryStore = {
   orders: [
     {
-      "id": "WPP-5523",
-      "source": "WhatsApp AI Bot 🤖",
-      "clientName": "Cristiano Ronaldo",
-      "phone": "+34 418400848",
-      "address": "🏠 Las peñas 5",
+      "id": "WPP-2240",
+      "source": "WhatsApp GPS Bot 📍",
+      "clientName": "Samuel",
+      "phone": "277318102716618",
+      "address": "📍 Ubicación GPS enviada por el cliente",
       "paymentMethod": "Efectivo",
       "items": [
-        { "name": "Hamburguesa Clásica", "price": 6, "desc": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa." },
-        { "name": "Postobón Colombiana", "price": 2.5 }
+        {
+          "name": "Pedido por WhatsApp GPS",
+          "price": 10,
+          "quantity": 1
+        }
       ],
-      "subtotal": 8.5,
+      "subtotal": 10,
       "deliveryFee": 2,
-      "total": 10.5,
+      "total": 12,
       "status": "En Preparación",
       "assignedDriver": null,
-      "notes": "Sin cambios ni notas especiales",
-      "timestamp": "2026-08-13T18:45:51.735Z",
+      "notes": "Ubicación GPS recibida: https://maps.google.com/?q=39.48757553100586,-1.0957531929016113",
+      "timestamp": "2026-08-13T12:32:08.888Z",
       "dateStr": "13/8/2026",
       "isoDateStr": "2026-08-13"
     },
     {
-      "id": "WPP-5524",
+      "id": "WPP-1990",
       "source": "WhatsApp AI Bot 🤖",
-      "clientName": "Camila",
-      "phone": "+34 612345678",
-      "address": "📍 Calle Principal 12, 3ºB",
+      "clientName": "Maria Camila Herrera",
+      "phone": "677394845",
+      "address": "🏠 Donde la negra",
       "paymentMethod": "Efectivo",
       "items": [
-        { "name": "Hamburguesa Parce Especial", "price": 8.5, "desc": "Doble carne, queso cheddar, bacon crujiente, salsas especiales." },
-        { "name": "Empanadas de Carne (3 ud)", "price": 4.5 }
+        {
+          "name": "Combo de Hamburguesa",
+          "price": 9,
+          "desc": "Carne, bacon, queso, cebolla caramelizada, lechuga, tomate, ensalada (INCLUYE PATATAS Y BEBIDA)."
+        }
       ],
-      "subtotal": 13,
+      "subtotal": 9,
       "deliveryFee": 2,
-      "total": 15,
+      "total": 11,
       "status": "En Preparación",
       "assignedDriver": null,
-      "notes": "Pedido de Camila - Entregar caliente",
-      "timestamp": "2026-08-13T18:40:00.000Z",
+      "notes": "Alitas",
+      "timestamp": "2026-08-13T18:32:45.599Z",
+      "dateStr": "13/8/2026",
+      "isoDateStr": "2026-08-13"
+    },
+    {
+      "id": "WPP-8355",
+      "source": "WhatsApp AI Bot 🤖",
+      "clientName": "Pepito Pérez",
+      "phone": "614460467",
+      "address": "Plaza ayuntamiento 1",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Hamburguesa Doble",
+          "price": 8,
+          "desc": "Doble carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
+        }
+      ],
+      "subtotal": 8,
+      "deliveryFee": 2,
+      "total": 10,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "Cambio de 50",
+      "timestamp": "2026-08-13T18:19:55.991Z",
       "dateStr": "13/8/2026",
       "isoDateStr": "2026-08-13"
     }
