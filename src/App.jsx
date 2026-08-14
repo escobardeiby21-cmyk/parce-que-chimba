@@ -138,6 +138,7 @@ function App() {
     return safeJsonParse('pq_chimba_orders', []);
   });
   const [adminTimeFilter, setAdminTimeFilter] = useState('all'); // 'all' (Todos los Pedidos en Vivo), 'shift', 'today', 'specific'
+  const [liveOrdersFilter, setLiveOrdersFilter] = useState('pending'); // 'pending' (Solo Activos en Cocina) | 'all' (Todos)
   const [selectedCustomDate, setSelectedCustomDate] = useState(new Date().toISOString().slice(0,10));
   const [adminTab, setAdminTab] = useState('sales'); // 'sales' o 'drivers'
 
@@ -1672,8 +1673,11 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                           filteredOrdersForStats = ordersHistory.filter(o => o.isoDateStr === selectedCustomDate);
                         }
 
-                        // Los pedidos en tiempo real SIEMPRE muestran la lista completa de pedidos en orden de llegada
-                        const liveOrders = ordersHistory;
+                        // Filtrar pedidos activos (en cocina/camino) o mostrar todos según la pestaña activa
+                        const activePendingCount = ordersHistory.filter(o => o.status !== 'Entregado').length;
+                        const liveOrders = liveOrdersFilter === 'pending'
+                          ? ordersHistory.filter(o => o.status !== 'Entregado')
+                          : ordersHistory;
 
                         const totalVentas = filteredOrdersForStats.reduce((s, o) => s + o.total, 0);
                         const totalEfectivo = filteredOrdersForStats.filter(o => o.paymentMethod === 'Efectivo').reduce((s, o) => s + o.total, 0);
@@ -1683,19 +1687,38 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                           <div className="space-y-6">
                             {/* LISTA DE PEDIDOS PRIMORDIAL (MUESTRA TODOS LOS PEDIDOS VIVOS EN TIEMPO REAL) */}
                             <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-orange-500/40 shadow-[0_0_30px_rgba(255,107,0,0.15)]">
-                              <div className="flex justify-between items-center border-b border-gray-800 pb-2.5">
+                              <div className="flex justify-between items-center border-b border-gray-800 pb-2.5 flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xl">⚡</span>
-                                  <h4 className="font-black text-base text-[var(--color-brand-yellow)]">Pedidos Recibidos en Tiempo Real ({liveOrders.length}):</h4>
+                                  <h4 className="font-black text-base text-[var(--color-brand-yellow)]">Pedidos Recibidos en Tiempo Real:</h4>
                                 </div>
-                                <button 
-                                  type="button"
-                                  onClick={() => fetchCloudOrders()}
-                                  className="bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-emerald-900 transition-colors cursor-pointer"
-                                >
-                                  <span>🔄</span>
-                                  <span>Actualizar</span>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  {/* Filtro: En Cocina vs Todos */}
+                                  <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-gray-800 text-xs font-bold">
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setLiveOrdersFilter('pending')} 
+                                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${liveOrdersFilter === 'pending' ? 'bg-amber-500 text-black font-black shadow' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                      🔥 En Cocina ({activePendingCount})
+                                    </button>
+                                    <button 
+                                      type="button" 
+                                      onClick={() => setLiveOrdersFilter('all')} 
+                                      className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${liveOrdersFilter === 'all' ? 'bg-amber-500 text-black font-black shadow' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                      📋 Todos ({ordersHistory.length})
+                                    </button>
+                                  </div>
+                                  <button 
+                                    type="button"
+                                    onClick={() => fetchCloudOrders()}
+                                    className="bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-emerald-900 transition-colors cursor-pointer"
+                                  >
+                                    <span>🔄</span>
+                                    <span>Actualizar</span>
+                                  </button>
+                                </div>
                               </div>
 
                               {liveOrders.length === 0 ? (

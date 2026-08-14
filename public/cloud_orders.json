@@ -17,12 +17,13 @@
       "subtotal": 10,
       "deliveryFee": 2,
       "total": 12,
-      "status": "En Preparación",
+      "status": "Entregado",
       "assignedDriver": null,
       "notes": "Ubicación GPS recibida",
       "timestamp": "2026-08-13T12:32:08.888Z",
       "dateStr": "13/8/2026",
-      "isoDateStr": "2026-08-13"
+      "isoDateStr": "2026-08-13",
+      "deliveredTimeStr": "17:00"
     },
     {
       "id": "WPP-1990",
@@ -45,30 +46,6 @@
       "assignedDriver": null,
       "notes": "Alitas",
       "timestamp": "2026-08-13T18:32:45.599Z",
-      "dateStr": "13/8/2026",
-      "isoDateStr": "2026-08-13"
-    },
-    {
-      "id": "WPP-8355",
-      "source": "WhatsApp AI Bot 🤖",
-      "clientName": "Pepito Pérez",
-      "phone": "614460467",
-      "address": "Plaza ayuntamiento 1",
-      "paymentMethod": "Efectivo",
-      "items": [
-        {
-          "name": "Hamburguesa Doble",
-          "price": 8,
-          "desc": "Doble carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
-        }
-      ],
-      "subtotal": 8,
-      "deliveryFee": 2,
-      "total": 10,
-      "status": "En Preparación",
-      "assignedDriver": null,
-      "notes": "Cambio de 50",
-      "timestamp": "2026-08-13T18:19:55.991Z",
       "dateStr": "13/8/2026",
       "isoDateStr": "2026-08-13"
     }
