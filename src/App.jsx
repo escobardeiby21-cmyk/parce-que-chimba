@@ -145,6 +145,7 @@ function App() {
   // Modal de Detalle de Domicilios por Liquidar / Liquidados
   const [payoutDetailModal, setPayoutDetailModal] = useState(null); // { driverName, filterType: 'pending'|'settled' }
   const [printableTicket, setPrintableTicket] = useState(null);
+  const [submittedOrderModal, setSubmittedOrderModal] = useState(null);
 
   // Función que calcula si el negocio está abierto según la Hora Oficial de España (Europe/Madrid)
   const checkIsWithinBusinessHours = () => {
@@ -839,41 +840,13 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
 
     const updatedHistory = [newOrder, ...ordersHistory];
     
-    // Enviar el paquete a la Nube en segundo plano sin bloquear el navegador del móvil
+    // Guardar el pedido en la Nube y LocalStorage en tiempo real de forma inmediata
     saveOrdersToCloudAndLocal(updatedHistory, isBusinessOpen, true);
 
-    let message = `*¡Hola! Quiero hacer un pedido en Que Chimba Parce* 🍔🔥\n\n`;
-    message += `🧾 *Número de Pedido:* ${orderId}\n\n`;
-    message += `*Mis Datos:*\n`;
-    message += `👤 Nombre: ${formData.name}\n`;
-    message += `📍 Dirección: ${formData.address}\n`;
-    message += `📱 Teléfono: ${formData.phone}\n`;
-    message += `💳 Método de Pago: ${formData.paymentMethod}\n`;
-    if (formData.notes) message += `📝 Notas: ${formData.notes}\n`;
-    
-    message += `\n*Mi Pedido:*\n`;
-    cart.forEach(item => {
-      message += `▪️ ${item.quantity}x ${item.name} (${(item.price * item.quantity).toFixed(2)}€)\n`;
-    });
-    
-    message += `\n*Subtotal:* ${cartSubtotal.toFixed(2)}€\n`;
-    message += `*🛵 Domicilio:* ${deliveryFee.toFixed(2)}€\n`;
-    message += `*Total a pagar: ${cartTotal.toFixed(2)}€*\n`;
-    message += `\n¡Quedo atento/a para confirmar!`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const phoneNumber = "34603959537";
-    const waUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-
-    // Abrir WhatsApp directamente (funciona 100% en Android, iPhone y PC)
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      window.location.href = waUrl;
-    } else {
-      window.open(waUrl, '_blank');
-    }
-
+    // Limpiar carrito e ingresar pedido a la vista flotante del cliente sin obligar a abrir la App de WhatsApp
     setCart([]);
     setIsCartOpen(false);
+    setSubmittedOrderModal(newOrder);
   };
 
   // Cambiar estado de un pedido (Despachar / Asignar / Entregar)
@@ -2655,6 +2628,69 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                   Cerrar
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Flotante de Confirmación de Pedido Recibido en la App (Sin obligar a abrir WhatsApp) */}
+      <AnimatePresence>
+        {submittedOrderModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-[#141414] border-2 border-[var(--color-brand-orange)] text-white w-full max-w-md rounded-3xl p-6 relative shadow-[0_0_50px_rgba(255,107,0,0.4)] text-center space-y-4 font-sans"
+            >
+              <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-lg animate-bounce">
+                🎉
+              </div>
+
+              <h3 className="text-xl font-black text-[var(--color-brand-yellow)] uppercase tracking-wide">
+                ¡Pedido Recibido con Éxito!
+              </h3>
+
+              <div className="bg-black/60 p-3 rounded-2xl border border-gray-800 space-y-1">
+                <span className="text-xs text-gray-400 font-bold block">Número de Pedido:</span>
+                <span className="font-mono text-2xl font-black text-amber-400">{submittedOrderModal.id}</span>
+              </div>
+
+              <div className="text-xs text-gray-300 bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800 text-left space-y-2">
+                <div className="flex justify-between items-center border-b border-gray-800 pb-1.5 font-bold">
+                  <span>👤 Cliente: {submittedOrderModal.clientName}</span>
+                  <span className="text-amber-400 font-black">{submittedOrderModal.total.toFixed(2)}€ ({submittedOrderModal.paymentMethod})</span>
+                </div>
+                <p className="text-gray-300">📍 <strong>Entrega:</strong> {submittedOrderModal.address}</p>
+                <p className="text-gray-300">📱 <strong>Teléfono:</strong> {submittedOrderModal.phone}</p>
+                
+                <div className="pt-2 border-t border-gray-800/80 space-y-1">
+                  <span className="text-[11px] text-yellow-400 font-bold uppercase block">🍔 Comida Solicitada:</span>
+                  {(Array.isArray(submittedOrderModal.items) ? submittedOrderModal.items : []).map((i, idx) => (
+                    <div key={idx} className="flex justify-between text-[11px]">
+                      <span>{i.quantity || 1}x {i.name}</span>
+                      <span className="font-mono text-gray-400">{((i.price || 0) * (i.quantity || 1)).toFixed(2)}€</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-emerald-950/80 border border-emerald-700/80 p-3.5 rounded-2xl text-emerald-300 text-xs font-semibold space-y-1">
+                <p className="font-bold flex items-center justify-center gap-1">
+                  <span>🛵</span> <span>¡Tu pedido ya está en preparación caliente en la cocina!</span>
+                </p>
+                <p className="text-[11px] text-emerald-400/90">
+                  Tiempo estimado: 25 a 35 minutos. Te contactaremos al número <strong>{submittedOrderModal.phone}</strong>.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSubmittedOrderModal(null)}
+                className="w-full bg-gradient-to-r from-[var(--color-brand-orange)] to-[var(--color-brand-yellow)] text-black font-black py-3.5 rounded-2xl text-sm shadow-xl cursor-pointer hover:scale-[1.02] transition-transform"
+              >
+                🛍️ Volver al Menú Principal
+              </button>
             </motion.div>
           </div>
         )}

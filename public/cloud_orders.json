@@ -1,54 +1,60 @@
 {
   "orders": [
     {
-      "id": "WPP-2240",
-      "source": "WhatsApp GPS Bot 📍",
-      "clientName": "Samuel",
-      "phone": "277318102716618",
-      "address": "📍 Ubicación GPS: https://maps.google.com/?q=39.48757553100586,-1.0957531929016113",
+      "id": "WPP-8824",
+      "source": "WhatsApp AI Bot 🤖",
+      "clientName": "Deiby Prueba",
+      "phone": "678954321",
+      "address": "🏠 Plaza España 5",
       "paymentMethod": "Efectivo",
       "items": [
         {
-          "name": "Pedido por WhatsApp GPS",
+          "name": "Hamburguesa Paisa \"Pan Brioche\"",
           "price": 10,
-          "quantity": 1
+          "desc": "Doble carne, bacon, queso, plátano maduro, huevo, cebolla caramelizada, lechuga, ensalada y salsa de la casa."
+        },
+        {
+          "name": "Jugo Natural Lulo en Agua",
+          "price": 3
         }
       ],
-      "subtotal": 10,
+      "subtotal": 13,
       "deliveryFee": 2,
-      "total": 12,
-      "status": "Entregado",
+      "total": 15,
+      "status": "En Preparación",
       "assignedDriver": null,
-      "notes": "Ubicación GPS recibida",
-      "timestamp": "2026-08-13T12:32:08.888Z",
-      "dateStr": "13/8/2026",
-      "isoDateStr": "2026-08-13",
-      "deliveredTimeStr": "17:00"
+      "notes": "Prueba número 1",
+      "timestamp": "2026-08-14T16:04:16.065Z",
+      "dateStr": "14/8/2026",
+      "isoDateStr": "2026-08-14"
     },
     {
-      "id": "WPP-1990",
+      "id": "WPP-9545",
       "source": "WhatsApp AI Bot 🤖",
-      "clientName": "Maria Camila Herrera",
-      "phone": "677394845",
-      "address": "🏠 Donde la negra",
+      "clientName": "Deiby Prueba",
+      "phone": "266679418400848",
+      "address": "📍 GPS / WhatsApp: Prueba número 1",
       "paymentMethod": "Efectivo",
       "items": [
         {
-          "name": "Combo de Hamburguesa",
-          "price": 9,
-          "desc": "Carne, bacon, queso, cebolla caramelizada, lechuga, tomate, ensalada (INCLUYE PATATAS Y BEBIDA)."
+          "name": "Hamburguesa Paisa \"Pan Brioche\"",
+          "price": 10,
+          "desc": "Doble carne, bacon, queso, plátano maduro, huevo, cebolla caramelizada, lechuga, ensalada y salsa de la casa."
+        },
+        {
+          "name": "Jugo Natural Lulo en Agua",
+          "price": 3
         }
       ],
-      "subtotal": 9,
+      "subtotal": 13,
       "deliveryFee": 2,
-      "total": 11,
-      "status": "Entregado",
+      "total": 15,
+      "status": "En Preparación",
       "assignedDriver": null,
-      "notes": "Alitas",
-      "timestamp": "2026-08-13T18:32:45.599Z",
-      "dateStr": "13/8/2026",
-      "isoDateStr": "2026-08-13",
-      "deliveredTimeStr": "17:24"
+      "notes": "Pedido tomado formalmente por WhatsApp AI",
+      "timestamp": "2026-08-14T16:04:07.283Z",
+      "dateStr": "14/8/2026",
+      "isoDateStr": "2026-08-14"
     }
   ],
   "isOpen": true
