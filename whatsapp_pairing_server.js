@@ -8,9 +8,12 @@ import path from 'path';
 
 const CLOUD_DB_URL = 'https://parcequechimba.com/api/orders';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
-});
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+  try {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  } catch(e) {}
+}
 
 let currentQrDataUrl = null;
 let isReady = false;
