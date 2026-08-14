@@ -1248,16 +1248,6 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
               <p className="text-gray-400 text-[10px]">🚫 <strong>Lunes:</strong> Cerrado por descanso</p>
             </div>
           </div>
-
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleInstallClick}
-            className="mt-3 bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-xs px-4 py-2 rounded-full shadow-[0_0_15px_rgba(255,107,0,0.5)] flex items-center gap-1.5 cursor-pointer border border-yellow-300/40"
-          >
-            <span>📲</span>
-            <span>Instalar App en el Móvil</span>
-          </motion.button>
         </div>
       </header>
 
