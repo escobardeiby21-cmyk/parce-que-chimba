@@ -1,76 +1,58 @@
 {
   "orders": [
     {
-      "id": "WPP-8105",
+      "id": "WPP-5303",
       "source": "WhatsApp AI Bot 🤖",
-      "clientName": "maluma",
-      "phone": "654321555",
-      "address": "🏠 gracias",
+      "clientName": "Messi",
+      "phone": "+34 418400848",
+      "address": "🏠 Plaza ayuntamiento 5",
       "paymentMethod": "Efectivo",
       "items": [
         {
-          "name": "Hamburguesa Paisa \"Pan Brioche\"",
-          "price": 10,
-          "desc": "Doble carne, bacon, queso, plátano maduro, huevo, cebolla caramelizada, lechuga, ensalada y salsa de la casa."
+          "name": "Picada Familiar",
+          "price": 25,
+          "desc": "Papa francesa, papa criolla, arepa, longaniza, chicharrón al barril, carne y costilla al barril."
         },
         {
-          "name": "Jugo Natural Lulo en Agua",
+          "name": "Jugo Natural Mango en Agua",
           "price": 3
-        },
-        {
-          "name": "Hamburguesa Clásica",
-          "price": 6,
-          "desc": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
-        },
-        {
-          "name": "Postobón Manzana",
-          "price": 2.5
         }
       ],
-      "subtotal": 21.5,
+      "subtotal": 28,
       "deliveryFee": 2,
-      "total": 23.5,
+      "total": 30,
       "status": "En Preparación",
       "assignedDriver": null,
-      "notes": "Sin cambios ni notas especiales",
-      "timestamp": "2026-08-14T16:28:30.369Z",
+      "notes": "Prueba número 2",
+      "timestamp": "2026-08-14T16:36:07.176Z",
       "dateStr": "14/8/2026",
       "isoDateStr": "2026-08-14"
     },
     {
-      "id": "WPP-8645",
+      "id": "WPP-3207",
       "source": "WhatsApp AI Bot 🤖",
-      "clientName": "maluma",
+      "clientName": "Messi",
       "phone": "266679418400848",
-      "address": "🏠 Plaza España 5",
+      "address": "📍 GPS / WhatsApp: Prueba número 2",
       "paymentMethod": "Efectivo",
       "items": [
         {
-          "name": "Hamburguesa Paisa \"Pan Brioche\"",
-          "price": 10,
-          "desc": "Doble carne, bacon, queso, plátano maduro, huevo, cebolla caramelizada, lechuga, ensalada y salsa de la casa."
+          "name": "Picada Familiar",
+          "price": 25,
+          "desc": "Papa francesa, papa criolla, arepa, longaniza, chicharrón al barril, carne y costilla al barril."
         },
         {
-          "name": "Jugo Natural Lulo en Agua",
+          "name": "Jugo Natural Mango en Agua",
           "price": 3
-        },
-        {
-          "name": "Hamburguesa Clásica",
-          "price": 6,
-          "desc": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
-        },
-        {
-          "name": "Postobón Manzana",
-          "price": 2.5
         }
       ],
-      "subtotal": 21.5,
+      "subtotal": 28,
       "deliveryFee": 2,
-      "total": 23.5,
+      "total": 30,
       "status": "En Preparación",
       "assignedDriver": null,
       "notes": "Pedido tomado formalmente por WhatsApp AI",
-      "timestamp": "2026-08-14T16:28:25.469Z",
+      "timestamp": "2026-08-14T16:35:57.942Z",
       "dateStr": "14/8/2026",
       "isoDateStr": "2026-08-14"
     }

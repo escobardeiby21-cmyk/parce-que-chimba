@@ -631,42 +631,53 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     } catch (err) {}
   };
 
-  // Escuchar y sincronizar automáticamente pedidos desde la nube sin borrar pedidos locales por error
+  // Escuchar y sincronizar automáticamente pedidos desde la nube en tiempo real desde /api/orders
   const fetchCloudOrders = async () => {
     try {
       const ts = Date.now();
       let res;
+      // PRIORIDAD MÁXIMA: Consultar el endpoint dinámico en vivo /api/orders
       try {
-        res = await fetch(`/cloud_orders.json?nocache=${ts}`);
+        res = await fetch(`/api/orders?nocache=${ts}`);
         if (!res || !res.ok) {
-          res = await fetch(`/api/orders?nocache=${ts}`);
+          res = await fetch(`/cloud_orders.json?nocache=${ts}`);
         }
       } catch (e) {
         try {
-          res = await fetch(`/api/orders?nocache=${ts}`);
+          res = await fetch(`/cloud_orders.json?nocache=${ts}`);
         } catch (e2) {}
       }
+
+      // También intentar sincronizar desde el servidor local si está corriendo en la misma red
+      let localDaemonOrders = [];
+      try {
+        const localDaemonRes = await fetch(`http://localhost:3333/api/orders?nocache=${ts}`);
+        if (localDaemonRes && localDaemonRes.ok) {
+          const daemonData = await localDaemonRes.json();
+          if (Array.isArray(daemonData?.orders)) localDaemonOrders = daemonData.orders;
+        }
+      } catch(e) {}
 
       if (res && res.ok) {
         const data = await res.json();
 
         if (data && typeof data === 'object') {
-          // COMBINAR pedidos locales con pedidos remotos por ID para que NUNCA se borren por error de red
-          if (Array.isArray(data.orders)) {
-            const deletedIds = new Set(safeJsonParse('pq_chimba_deleted_ids', []));
-            const validCloudOrders = data.orders.filter(o => o && o.id && !deletedIds.has(o.id));
-            const localOrders = safeJsonParse('pq_chimba_orders', []).filter(o => o && o.id && !deletedIds.has(o.id));
-            const mergedMap = new Map();
+          // COMBINAR pedidos locales, nube /api/orders y servidor WhatsApp por ID
+          const cloudList = Array.isArray(data.orders) ? data.orders : [];
+          const allIncoming = [...cloudList, ...localDaemonOrders];
+          const deletedIds = new Set(safeJsonParse('pq_chimba_deleted_ids', []));
+          const validCloudOrders = allIncoming.filter(o => o && o.id && !deletedIds.has(o.id));
+          const localOrders = safeJsonParse('pq_chimba_orders', []).filter(o => o && o.id && !deletedIds.has(o.id));
+          const mergedMap = new Map();
 
-            // Insertar pedidos remotos primero (excluyendo eliminados)
-            validCloudOrders.forEach(o => { if (o && o.id) mergedMap.set(o.id, o); });
-            // Preservar pedidos locales que no estén en remoto
-            localOrders.forEach(o => { if (o && o.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o); });
+          // Insertar pedidos remotos primero (excluyendo eliminados)
+          validCloudOrders.forEach(o => { if (o && o.id) mergedMap.set(o.id, o); });
+          // Preservar pedidos locales que no estén en remoto
+          localOrders.forEach(o => { if (o && o.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o); });
 
-            const mergedList = Array.from(mergedMap.values());
-            setOrdersHistory(mergedList);
-            localStorage.setItem('pq_chimba_orders', JSON.stringify(mergedList));
-          }
+          const mergedList = Array.from(mergedMap.values());
+          setOrdersHistory(mergedList);
+          localStorage.setItem('pq_chimba_orders', JSON.stringify(mergedList));
 
           if (typeof data.isOpen === 'boolean') {
             const savedManual = localStorage.getItem('pq_chimba_manual_override');
