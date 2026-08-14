@@ -2487,6 +2487,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
       </AnimatePresence>
 
       {/* Ticket de Liquidación Imprimible (POS / Recibo con Logo) */}
+      {/* Modal de Ticket Imprimible (Individual de Cliente o Liquidación de Repartidor) */}
       <AnimatePresence>
         {printableTicket && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
@@ -2499,7 +2500,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
               {/* Botón Cerrar */}
               <button 
                 onClick={() => setPrintableTicket(null)} 
-                className="absolute top-3 right-3 text-gray-600 hover:text-black bg-gray-200 w-7 h-7 rounded-full flex items-center justify-center font-bold no-print"
+                className="absolute top-3 right-3 text-gray-600 hover:text-black bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center font-bold no-print cursor-pointer"
               >
                 ✕
               </button>
@@ -2510,64 +2511,139 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                 <img src="/logo.png" alt="Que Chimba Parce Logo" className="w-24 h-24 mx-auto object-contain" />
                 
                 <h2 className="font-black text-base uppercase tracking-wider">PARCE QUE CHIMBA</h2>
-                <p className="text-[11px] text-gray-700">Comida Rápida Colombiana 🇨🇴</p>
+                <p className="text-[11px] text-gray-700">Comida Rápida Colombiana 🇨🇴🇪🇸</p>
                 <div className="border-b-2 border-dashed border-gray-400 my-2"></div>
 
-                <div className="font-bold text-sm bg-gray-100 p-2 rounded">
-                  TICKET DE LIQUIDACIÓN
-                  <span className="block text-[10px] font-normal text-gray-600">[{printableTicket.titleType}]</span>
-                </div>
-
-                <div className="text-left space-y-1 text-[11px]">
-                  <p><strong>Repartidor:</strong> {printableTicket.driverName}</p>
-                  <p><strong>Fecha Emisión:</strong> {printableTicket.dateStr}</p>
-                  <p><strong>Total Envíos:</strong> {printableTicket.orders.length}</p>
-                </div>
-
-                <div className="border-b border-dashed border-gray-400 my-2"></div>
-
-                {/* Tabla de Pedidos */}
-                <div className="space-y-1.5 text-left text-[10px]">
-                  <div className="flex justify-between font-bold border-b border-gray-300 pb-1">
-                    <span>PEDIDO / FECHA</span>
-                    <span>DOMICILIO</span>
-                  </div>
-                  {printableTicket.orders.map(o => (
-                    <div key={o.id} className="flex justify-between">
-                      <span>{o.id} ({o.timeStr})</span>
-                      <span>2.00€</span>
+                {/* SI ES UN TICKET DE PEDIDO INDIVIDUAL DE CLIENTE */}
+                {printableTicket.id && !printableTicket.orders ? (
+                  <>
+                    <div className="font-bold text-sm bg-gray-100 p-2 rounded">
+                      TICKET DE PEDIDO DE CLIENTE
+                      <span className="block text-[11px] font-black text-amber-600">{printableTicket.id}</span>
                     </div>
-                  ))}
-                </div>
 
-                <div className="border-b-2 border-dashed border-gray-400 my-2"></div>
+                    <div className="text-left space-y-1.5 text-[11px]">
+                      <p><strong>Cliente:</strong> {printableTicket.clientName}</p>
+                      <p><strong>Teléfono:</strong> {printableTicket.phone}</p>
+                      <p><strong>Dirección:</strong> {formatOrderAddressAndMaps(printableTicket.address).text}</p>
+                      <p><strong>Método de Pago:</strong> {printableTicket.paymentMethod}</p>
+                      <p><strong>Fecha/Hora:</strong> {printableTicket.dateStr} ({printableTicket.timeStr || ''})</p>
+                    </div>
 
-                {/* Total Final */}
-                <div className="flex justify-between items-center text-sm font-black p-2 bg-gray-100 rounded">
-                  <span>TOTAL A PAGAR:</span>
-                  <span className="text-base text-emerald-700">{printableTicket.totalAmount.toFixed(2)}€</span>
-                </div>
+                    <div className="border-b border-dashed border-gray-400 my-2"></div>
 
-                {/* Firmas */}
-                <div className="pt-6 grid grid-cols-2 gap-4 text-[9px] text-gray-600">
-                  <div className="border-t border-gray-400 pt-1">
-                    Firma Dueño
-                  </div>
-                  <div className="border-t border-gray-400 pt-1">
-                    Firma Repartidor
-                  </div>
-                </div>
+                    {/* Detalle de Platos */}
+                    <div className="space-y-1.5 text-left text-[11px]">
+                      <div className="flex justify-between font-bold border-b border-gray-300 pb-1">
+                        <span>CANT x PRODUCTO</span>
+                        <span>PRECIO</span>
+                      </div>
+                      {(Array.isArray(printableTicket.items) ? printableTicket.items : []).map((i, idx) => {
+                        const qty = i.quantity || 1;
+                        const price = i.price || 0;
+                        return (
+                          <div key={idx} className="space-y-0.5">
+                            <div className="flex justify-between font-bold">
+                              <span>{qty}x {i.name}</span>
+                              <span>{(price * qty).toFixed(2)}€</span>
+                            </div>
+                            {i.desc && <div className="text-[10px] text-gray-500 italic pl-3">└ {i.desc}</div>}
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                <p className="text-[9px] text-gray-500 pt-2">¡Gracias por tu excelente trabajo!</p>
+                    {printableTicket.notes && (
+                      <div className="text-left text-[11px] bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+                        📝 <strong>Notas:</strong> {printableTicket.notes}
+                      </div>
+                    )}
+
+                    <div className="border-b-2 border-dashed border-gray-400 my-2"></div>
+
+                    {/* Desglose de Totales */}
+                    <div className="text-left text-[11px] space-y-1">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Subtotal Comida:</span>
+                        <span>{(printableTicket.subtotal || (printableTicket.total - (printableTicket.deliveryFee || 2.0))).toFixed(2)}€</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600">
+                        <span>Envío a Domicilio:</span>
+                        <span>+{(printableTicket.deliveryFee || 2.0).toFixed(2)}€</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm font-black p-2 bg-gray-100 rounded mt-2">
+                      <span>TOTAL A PAGAR:</span>
+                      <span className="text-base text-emerald-700">{(printableTicket.total || 0).toFixed(2)}€</span>
+                    </div>
+                  </>
+                ) : (
+                  /* TICKET DE LIQUIDACIÓN DE REPARTIDOR */
+                  <>
+                    <div className="font-bold text-sm bg-gray-100 p-2 rounded">
+                      TICKET DE LIQUIDACIÓN REPARTIDOR
+                      <span className="block text-[10px] font-normal text-gray-600">[{printableTicket.titleType || 'Liquidación'}]</span>
+                    </div>
+
+                    <div className="text-left space-y-1 text-[11px]">
+                      <p><strong>Repartidor:</strong> {printableTicket.driverName}</p>
+                      <p><strong>Fecha Emisión:</strong> {printableTicket.dateStr}</p>
+                      <p><strong>Total Envíos:</strong> {(printableTicket.orders || []).length}</p>
+                    </div>
+
+                    <div className="border-b border-dashed border-gray-400 my-2"></div>
+
+                    {/* Tabla de Envíos */}
+                    <div className="space-y-1.5 text-left text-[10px]">
+                      <div className="flex justify-between font-bold border-b border-gray-300 pb-1">
+                        <span>PEDIDO / FECHA</span>
+                        <span>DOMICILIO</span>
+                      </div>
+                      {(printableTicket.orders || []).map(o => (
+                        <div key={o.id} className="flex justify-between">
+                          <span>{o.id} ({o.timeStr})</span>
+                          <span>2.00€</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-b-2 border-dashed border-gray-400 my-2"></div>
+
+                    {/* Total Final */}
+                    <div className="flex justify-between items-center text-sm font-black p-2 bg-gray-100 rounded">
+                      <span>TOTAL A PAGAR:</span>
+                      <span className="text-base text-emerald-700">{(printableTicket.totalAmount || 0).toFixed(2)}€</span>
+                    </div>
+
+                    {/* Firmas */}
+                    <div className="pt-6 grid grid-cols-2 gap-4 text-[9px] text-gray-600">
+                      <div className="border-t border-gray-400 pt-1">
+                        Firma Dueño
+                      </div>
+                      <div className="border-t border-gray-400 pt-1">
+                        Firma Repartidor
+                      </div>
+                    </div>
+
+                    <p className="text-[9px] text-gray-500 pt-2">¡Gracias por tu excelente trabajo!</p>
+                  </>
+                )}
               </div>
 
-              {/* Botón Imprimir */}
-              <div className="pt-4 border-t border-gray-200 no-print">
+              {/* Botones Imprimir / Cerrar */}
+              <div className="pt-4 border-t border-gray-200 flex gap-2 no-print">
                 <button 
                   onClick={() => window.print()}
-                  className="w-full bg-black text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow hover:bg-gray-800"
+                  className="flex-1 bg-black text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 shadow hover:bg-gray-800 cursor-pointer"
                 >
-                  <span>🖨️</span> Imprimir Ticket / Guardar PDF
+                  <span>🖨️</span> Imprimir Ticket
+                </button>
+                <button 
+                  onClick={() => setPrintableTicket(null)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"
+                >
+                  Cerrar
                 </button>
               </div>
             </motion.div>
