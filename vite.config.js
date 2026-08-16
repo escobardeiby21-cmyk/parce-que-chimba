@@ -23,6 +23,10 @@ export default defineConfig({
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/,
             handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /^https:\/\/api\.restful-api\.dev\/.*/,
+            handler: 'NetworkOnly'
           }
         ]
       },

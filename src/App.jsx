@@ -641,28 +641,33 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     setOrdersHistory(finalOrdersList);
     localStorage.setItem('pq_chimba_orders', JSON.stringify(finalOrdersList));
 
-    // Guardar en Vercel Backend, Servidor Local y Nube Persistente Global
+    const payloadStr = JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus });
+
+    // 1. Guardar en Vercel Backend /api/orders (Aislado de excepciones de Chrome)
     try {
-      await fetch('/api/orders', {
+      fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus }),
-        keepalive: true
-      });
+        body: payloadStr
+      }).catch(() => {});
+    } catch (err) {}
 
-      await fetch('https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8', {
+    // 2. Guardar en Nube Persistente Global (Aislado para Chrome/Android)
+    try {
+      fetch('https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: "ParceQueChimbaOrders", data: { orders: finalOrdersList, isOpen: currentOpenStatus } }),
-        keepalive: true
-      });
+        body: JSON.stringify({ name: "ParceQueChimbaOrders", data: { orders: finalOrdersList, isOpen: currentOpenStatus } })
+      }).catch(() => {});
+    } catch (err) {}
 
-      await fetch('http://localhost:3333/api/orders', {
+    // 3. Guardar en Servidor Local (Aislado)
+    try {
+      fetch('http://localhost:3333/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus }),
-        keepalive: true
-      });
+        body: payloadStr
+      }).catch(() => {});
     } catch (err) {}
   };
 
