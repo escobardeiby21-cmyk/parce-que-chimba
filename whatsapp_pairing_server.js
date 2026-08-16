@@ -220,14 +220,19 @@ async function pushOrderToCloud(newOrder) {
         console.log(`✅ ¡PEDIDO GUARDADO LOCALMENTE EN DISCO!: ${newOrder.id}`);
       } catch (e) {}
 
-      // 3. Enviar a Servidor Remoto /api/orders y transmitir evento SSE en tiempo real (<0.1s)
+      // 3. Enviar a Servidor Remoto /api/orders y Nube Persistente Directa
       try {
         await fetch(REMOTE_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orders: existingOrders, isOpen })
         });
-        console.log(`☁️ ¡PEDIDO SINCRONIZADO EN NUBE!: ${newOrder.id}`);
+        await fetch('https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: "ParceQueChimbaOrders", data: { orders: existingOrders, isOpen } })
+        });
+        console.log(`☁️ ¡PEDIDO SINCRONIZADO EN NUBE PERSISTENTE!: ${newOrder.id}`);
       } catch (e) {}
 
       broadcastSSEEvent('new_order', newOrder);

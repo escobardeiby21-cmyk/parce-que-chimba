@@ -77,6 +77,8 @@ let memoryStore = {
   lastUpdate: new Date().toISOString()
 };
 
+const CLOUD_STORE_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -88,6 +90,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 1. Sincronizar primero desde la Nube Global Persistente
+    try {
+      const cloudRes = await fetch(CLOUD_STORE_URL);
+      if (cloudRes && cloudRes.ok) {
+        const cloudJson = await cloudRes.json();
+        if (cloudJson && cloudJson.data) {
+          const remoteOrders = Array.isArray(cloudJson.data.orders) ? cloudJson.data.orders : [];
+          const existingMap = new Map(memoryStore.orders.map(o => [o.id, o]));
+          remoteOrders.forEach(o => { if (o && o.id) existingMap.set(o.id, o); });
+          memoryStore.orders = Array.from(existingMap.values());
+          if (typeof cloudJson.data.isOpen === 'boolean') {
+            memoryStore.isOpen = cloudJson.data.isOpen;
+          }
+        }
+      }
+    } catch(errCloud) {}
+
     if (req.method === 'GET') {
       return res.status(200).json(memoryStore);
     }
@@ -117,6 +136,18 @@ export default async function handler(req, res) {
 
       memoryStore.isOpen = isOpen;
       memoryStore.lastUpdate = new Date().toISOString();
+
+      // Guardar inmediatamente en la Nube Persistente Global para que TODOS los servidores Vercel lo vean
+      try {
+        await fetch(CLOUD_STORE_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: "ParceQueChimbaOrders",
+            data: memoryStore
+          })
+        });
+      } catch(errPush) {}
 
       return res.status(200).json(memoryStore);
     }

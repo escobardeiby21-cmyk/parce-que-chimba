@@ -641,12 +641,19 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     setOrdersHistory(finalOrdersList);
     localStorage.setItem('pq_chimba_orders', JSON.stringify(finalOrdersList));
 
-    // Guardar en Vercel Backend y Servidor Local
+    // Guardar en Vercel Backend, Servidor Local y Nube Persistente Global
     try {
       await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus }),
+        keepalive: true
+      });
+
+      await fetch('https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: "ParceQueChimbaOrders", data: { orders: finalOrdersList, isOpen: currentOpenStatus } }),
         keepalive: true
       });
 
@@ -676,6 +683,16 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
         } catch (e2) {}
       }
 
+      // También intentar sincronizar desde la Nube Persistente Global
+      let directCloudOrders = [];
+      try {
+        const directCloudRes = await fetch(`https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8?nocache=${ts}`);
+        if (directCloudRes && directCloudRes.ok) {
+          const directData = await directCloudRes.json();
+          if (Array.isArray(directData?.data?.orders)) directCloudOrders = directData.data.orders;
+        }
+      } catch(e) {}
+
       // También intentar sincronizar desde el servidor local si está corriendo en la misma red
       let localDaemonOrders = [];
       try {
@@ -690,9 +707,9 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
         const data = await res.json();
 
         if (data && typeof data === 'object') {
-          // COMBINAR pedidos locales, nube /api/orders y servidor WhatsApp por ID
+          // COMBINAR pedidos locales, nube /api/orders, Nube Persistente y servidor WhatsApp por ID
           const cloudList = Array.isArray(data.orders) ? data.orders : [];
-          const allIncoming = [...cloudList, ...localDaemonOrders];
+          const allIncoming = [...cloudList, ...directCloudOrders, ...localDaemonOrders];
           const deletedIds = new Set(safeJsonParse('pq_chimba_deleted_ids', []));
           const validCloudOrders = allIncoming.filter(o => o && o.id && !deletedIds.has(o.id));
           const localOrders = safeJsonParse('pq_chimba_orders', []).filter(o => o && o.id && !deletedIds.has(o.id));
