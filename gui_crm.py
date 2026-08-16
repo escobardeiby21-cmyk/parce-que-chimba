@@ -55,6 +55,12 @@ class ParceQueChimbaCRM:
             {"id": "inv10", "name": "Coca-Cola 330ml", "category": "Bebidas", "stock": 60, "min": 15, "unit": "latas"}
         ]
 
+        # Repartidores por defecto
+        self.drivers = [
+            {"id": "d1", "name": "Repartidor 1 (Juan)", "phone": "34600000001"},
+            {"id": "d2", "name": "Repartidor 2 (Carlos)", "phone": "34600000002"}
+        ]
+
         self.load_local_storage()
         self.setup_styles()
         self.build_ui()
@@ -76,7 +82,7 @@ class ParceQueChimbaCRM:
         
         # Pestañas
         self.style.configure("TNotebook", background="#121212", borderwidth=0)
-        self.style.configure("TNotebook.Tab", background="#1e1e1e", foreground="#d1d5db", padding=[16, 8], font=("Segoe UI", 10, "bold"))
+        self.style.configure("TNotebook.Tab", background="#1e1e1e", foreground="#d1d5db", padding=[14, 7], font=("Segoe UI", 10, "bold"))
         self.style.map("TNotebook.Tab", background=[("selected", "#f59e0b")], foreground=[("selected", "#000000")])
 
         # Botones
@@ -113,7 +119,12 @@ class ParceQueChimbaCRM:
         self.notebook.add(self.tab_inventory, text="📦 Control de Inventario")
         self.build_tab_inventory()
 
-        # Tab 4: Contabilidad & Reportes
+        # Tab 4: Repartidores & Domicilios
+        self.tab_drivers = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_drivers, text="🛵 Repartidores & Domicilios")
+        self.build_tab_drivers()
+
+        # Tab 5: Contabilidad & Reportes
         self.tab_accounting = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_accounting, text="📊 Contabilidad & Ventas")
         self.build_tab_accounting()
@@ -123,15 +134,18 @@ class ParceQueChimbaCRM:
         top_bar = tk.Frame(self.tab_orders, bg="#121212")
         top_bar.pack(fill="x", pady=6)
 
+        btn_manual = tk.Button(top_bar, text="➕ Crear Pedido Manual (Llamada / Wpp)", bg="#f59e0b", fg="black", font=("Segoe UI", 9, "bold"), relief="flat", command=self.create_manual_order_dialog)
+        btn_manual.pack(side="left", padx=5)
+
         btn_refresh = tk.Button(top_bar, text="🔄 Refrescar Nube", bg="#3b82f6", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", command=self.manual_sync)
         btn_refresh.pack(side="left", padx=5)
 
         self.lbl_orders_count = tk.Label(top_bar, text="Pedidos Totales: 0", bg="#121212", fg="#9ca3af", font=("Segoe UI", 10, "bold"))
         self.lbl_orders_count.pack(side="right", padx=5)
 
-        # Tabla Treeview para Pedidos
-        columns = ("id", "time", "client", "phone", "address", "total", "payment", "status")
-        self.tree_orders = ttk.Treeview(self.tab_orders, columns=columns, show="headings", height=16)
+        # Tabla Treeview para Pedidos (incluye columna Repartidor)
+        columns = ("id", "time", "client", "phone", "address", "total", "payment", "driver", "status")
+        self.tree_orders = ttk.Treeview(self.tab_orders, columns=columns, show="headings", height=15)
 
         self.tree_orders.heading("id", text="ID Pedido")
         self.tree_orders.heading("time", text="Hora")
@@ -140,16 +154,18 @@ class ParceQueChimbaCRM:
         self.tree_orders.heading("address", text="Dirección")
         self.tree_orders.heading("total", text="Total (€)")
         self.tree_orders.heading("payment", text="Pago")
+        self.tree_orders.heading("driver", text="Repartidor")
         self.tree_orders.heading("status", text="Estado")
 
-        self.tree_orders.column("id", width=110, anchor="center")
-        self.tree_orders.column("time", width=80, anchor="center")
-        self.tree_orders.column("client", width=140)
-        self.tree_orders.column("phone", width=110, anchor="center")
-        self.tree_orders.column("address", width=260)
-        self.tree_orders.column("total", width=90, anchor="center")
-        self.tree_orders.column("payment", width=100, anchor="center")
-        self.tree_orders.column("status", width=120, anchor="center")
+        self.tree_orders.column("id", width=100, anchor="center")
+        self.tree_orders.column("time", width=75, anchor="center")
+        self.tree_orders.column("client", width=130)
+        self.tree_orders.column("phone", width=100, anchor="center")
+        self.tree_orders.column("address", width=220)
+        self.tree_orders.column("total", width=80, anchor="center")
+        self.tree_orders.column("payment", width=85, anchor="center")
+        self.tree_orders.column("driver", width=140, anchor="center")
+        self.tree_orders.column("status", width=110, anchor="center")
 
         self.tree_orders.pack(fill="both", expand=True, pady=6)
 
@@ -157,11 +173,17 @@ class ParceQueChimbaCRM:
         action_bar = tk.Frame(self.tab_orders, bg="#121212")
         action_bar.pack(fill="x", pady=6)
 
-        btn_deliver = tk.Button(action_bar, text="✅ Marcar como ENTREGADO", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), relief="flat", command=self.mark_selected_delivered)
-        btn_deliver.pack(side="left", padx=5)
+        btn_assign = tk.Button(action_bar, text="🛵 Confirmar y Asignar Repartidor", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.assign_driver_to_order_dialog)
+        btn_assign.pack(side="left", padx=4)
 
-        btn_wpp = tk.Button(action_bar, text="💬 Abrir WhatsApp de Cliente", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), relief="flat", command=self.open_selected_whatsapp)
-        btn_wpp.pack(side="left", padx=5)
+        btn_notify_drv = tk.Button(action_bar, text="💬 Notificar Repartidor WhatsApp", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), command=self.send_driver_whatsapp_notification)
+        btn_notify_drv.pack(side="left", padx=4)
+
+        btn_deliver = tk.Button(action_bar, text="✅ Marcar ENTREGADO", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.mark_selected_delivered)
+        btn_deliver.pack(side="left", padx=4)
+
+        btn_wpp = tk.Button(action_bar, text="💬 WhatsApp Cliente", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=self.open_selected_whatsapp)
+        btn_wpp.pack(side="left", padx=4)
 
     # --- TAB 2: CRM CLIENTES ---
     def build_tab_crm(self):
@@ -354,6 +376,7 @@ class ParceQueChimbaCRM:
         self.lbl_orders_count.config(text=f"Pedidos Totales: {len(self.orders)}")
 
         for o in self.orders:
+            driver_display = o.get("assignedDriver") or "❌ Sin Asignar"
             self.tree_orders.insert("", "end", values=(
                 o.get("id", ""),
                 o.get("timeStr", ""),
@@ -362,6 +385,7 @@ class ParceQueChimbaCRM:
                 o.get("address", ""),
                 f"{o.get('total', 0):.2f}€",
                 o.get("paymentMethod", "Efectivo"),
+                driver_display,
                 o.get("status", "En Cocina")
             ))
 
@@ -672,6 +696,349 @@ class ParceQueChimbaCRM:
             self.save_local_storage()
             messagebox.showinfo("Eliminado", f"Insumo '{item_name}' eliminado.")
 
+    # --- PESTAÑA Y LÓGICA DE REPARTIDORES & DOMICILIOS ---
+    def build_tab_drivers(self):
+        top_bar = tk.Frame(self.tab_drivers, bg="#121212")
+        top_bar.pack(fill="x", pady=6)
+
+        lbl_drv_title = tk.Label(top_bar, text="🛵 Registro y Liquidación de Repartidores (2.00€ por Envío)", bg="#121212", fg="#f59e0b", font=("Segoe UI", 12, "bold"))
+        lbl_drv_title.pack(side="left")
+
+        columns = ("name", "phone", "active", "delivered", "payout")
+        self.tree_drivers = ttk.Treeview(self.tab_drivers, columns=columns, show="headings", height=14)
+
+        self.tree_drivers.heading("name", text="Nombre Repartidor")
+        self.tree_drivers.heading("phone", text="Teléfono WhatsApp")
+        self.tree_drivers.heading("active", text="Entregas Activas")
+        self.tree_drivers.heading("delivered", text="Total Entregados")
+        self.tree_drivers.heading("payout", text="Pendiente Liquidar (€)")
+
+        self.tree_drivers.column("name", width=200)
+        self.tree_drivers.column("phone", width=140, anchor="center")
+        self.tree_drivers.column("active", width=120, anchor="center")
+        self.tree_drivers.column("delivered", width=120, anchor="center")
+        self.tree_drivers.column("payout", width=160, anchor="center")
+
+        self.tree_drivers.pack(fill="both", expand=True, pady=6)
+
+        action_bar = tk.Frame(self.tab_drivers, bg="#121212")
+        action_bar.pack(fill="x", pady=6)
+
+        btn_add_drv = tk.Button(action_bar, text="➕ Agregar Repartidor", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.add_new_driver_dialog)
+        btn_add_drv.pack(side="left", padx=5)
+
+        btn_settle = tk.Button(action_bar, text="💰 Liquidar PAGO a Repartidor", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.settle_driver_payout)
+        btn_settle.pack(side="left", padx=5)
+
+        btn_del_drv = tk.Button(action_bar, text="🗑️ Eliminar Repartidor", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=self.delete_selected_driver)
+        btn_del_drv.pack(side="left", padx=5)
+
+        self.render_drivers()
+
+    def render_drivers(self):
+        for item in self.tree_drivers.get_children():
+            self.tree_drivers.delete(item)
+
+        for d in self.drivers:
+            dname = d["name"]
+            active_count = len([o for o in self.orders if o.get("assignedDriver") == dname and o.get("status") == "En Camino"])
+            delivered_count = len([o for o in self.orders if o.get("assignedDriver") == dname and o.get("status") == "Entregado"])
+            unsettled_count = len([o for o in self.orders if o.get("assignedDriver") == dname and o.get("status") == "Entregado" and not o.get("isSettled")])
+            pending_payout = unsettled_count * 2.00
+
+            self.tree_drivers.insert("", "end", values=(
+                dname,
+                d.get("phone", ""),
+                active_count,
+                delivered_count,
+                f"{pending_payout:.2f} € ({unsettled_count} envíos)"
+            ))
+
+    def add_new_driver_dialog(self):
+        top = tk.Toplevel(self.root)
+        top.title("➕ Registrar Nuevo Repartidor")
+        top.geometry("380x250")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text="🛵 Registro de Repartidor", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 11, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=5)
+        tk.Label(f1, text="Nombre Repartidor:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_name = tk.Entry(f1, font=("Segoe UI", 10), width=18)
+        e_name.pack(side="left", padx=5)
+
+        f2 = tk.Frame(top, bg="#1e1e1e")
+        f2.pack(pady=5)
+        tk.Label(f2, text="Teléfono WhatsApp:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_phone = tk.Entry(f2, font=("Segoe UI", 10), width=18)
+        e_phone.insert(0, "34600000000")
+        e_phone.pack(side="left", padx=5)
+
+        def save_drv():
+            name = e_name.get().strip()
+            phone = e_phone.get().strip()
+            if not name or not phone:
+                return messagebox.showerror("Error", "Ingresa Nombre y Teléfono del repartidor.")
+            new_d = {"id": f"d_{int(time.time())}", "name": name, "phone": phone}
+            self.drivers.append(new_d)
+            self.render_drivers()
+            self.save_local_storage()
+            top.destroy()
+            messagebox.showinfo("Éxito", f"Repartidor '{name}' agregado con éxito.")
+
+        tk.Button(top, text="💾 Guardar Repartidor", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=save_drv).pack(pady=16)
+
+    def delete_selected_driver(self):
+        selected = self.tree_drivers.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un repartidor para eliminar.")
+        
+        vals = self.tree_drivers.item(selected[0])["values"]
+        dname = str(vals[0])
+        if messagebox.askyesno("Eliminar Repartidor", f"¿Deseas eliminar a '{dname}' de la lista de repartidores?"):
+            self.drivers = [d for d in self.drivers if d["name"] != dname]
+            self.render_drivers()
+            self.save_local_storage()
+
+    def settle_driver_payout(self):
+        selected = self.tree_drivers.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un repartidor para liquidar su pago.")
+
+        vals = self.tree_drivers.item(selected[0])["values"]
+        dname = str(vals[0])
+        unsettled_orders = [o for o in self.orders if o.get("assignedDriver") == dname and o.get("status") == "Entregado" and not o.get("isSettled")]
+        
+        if not unsettled_orders:
+            return messagebox.showinfo("Sin Saldo", f"'{dname}' no tiene envíos pendientes por liquidar.")
+
+        total_due = len(unsettled_orders) * 2.00
+        if messagebox.askyesno("Liquidar Pago", f"¿PAGAR {total_due:.2f}€ a '{dname}' por {len(unsettled_orders)} envíos completados?"):
+            for o in unsettled_orders:
+                o["isSettled"] = True
+            self.render_drivers()
+            self.save_local_storage()
+            messagebox.showinfo("Liquidación Completada", f"¡Se liquidó {total_due:.2f}€ a {dname} con éxito!")
+
+    def create_manual_order_dialog(self):
+        top = tk.Toplevel(self.root)
+        top.title("➕ Crear Pedido Manual (Llamada / WhatsApp Directo)")
+        top.geometry("440x450")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text="📞 Nuevo Pedido Manual (Llamada / Wpp)", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 12, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=3)
+        tk.Label(f1, text="Nombre Cliente:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_name = tk.Entry(f1, font=("Segoe UI", 10), width=22)
+        e_name.pack(side="left", padx=5)
+
+        f2 = tk.Frame(top, bg="#1e1e1e")
+        f2.pack(pady=3)
+        tk.Label(f2, text="Teléfono:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_phone = tk.Entry(f2, font=("Segoe UI", 10), width=22)
+        e_phone.insert(0, "34600000000")
+        e_phone.pack(side="left", padx=5)
+
+        f3 = tk.Frame(top, bg="#1e1e1e")
+        f3.pack(pady=3)
+        tk.Label(f3, text="Dirección Entrega:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_addr = tk.Entry(f3, font=("Segoe UI", 10), width=22)
+        e_addr.insert(0, "Calle ")
+        e_addr.pack(side="left", padx=5)
+
+        f4 = tk.Frame(top, bg="#1e1e1e")
+        f4.pack(pady=3)
+        tk.Label(f4, text="Detalle Platos / Notas:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_notes = tk.Entry(f4, font=("Segoe UI", 10), width=22)
+        e_notes.insert(0, "1x Hamburguesa Paisa, 1x Postobón")
+        e_notes.pack(side="left", padx=5)
+
+        f5 = tk.Frame(top, bg="#1e1e1e")
+        f5.pack(pady=3)
+        tk.Label(f5, text="Total (€):", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_total = tk.Entry(f5, font=("Segoe UI", 10), width=22)
+        e_total.insert(0, "14.50")
+        e_total.pack(side="left", padx=5)
+
+        f6 = tk.Frame(top, bg="#1e1e1e")
+        f6.pack(pady=3)
+        tk.Label(f6, text="Método de Pago:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        cb_pay = ttk.Combobox(f6, values=["Efectivo", "Bizum"], width=20, state="readonly")
+        cb_pay.set("Efectivo")
+        cb_pay.pack(side="left", padx=5)
+
+        f7 = tk.Frame(top, bg="#1e1e1e")
+        f7.pack(pady=3)
+        tk.Label(f7, text="Asignar Repartidor:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        drv_names = [d["name"] for d in self.drivers]
+        cb_drv = ttk.Combobox(f7, values=["❌ Sin Asignar"] + drv_names, width=20, state="readonly")
+        cb_drv.set("❌ Sin Asignar")
+        cb_drv.pack(side="left", padx=5)
+
+        def save_manual():
+            cname = e_name.get().strip() or "Cliente Manual"
+            cphone = e_phone.get().strip() or "Sin Teléfono"
+            caddr = e_addr.get().strip() or "Local"
+            cnotes = e_notes.get().strip()
+            drv_sel = cb_drv.get()
+            if drv_sel == "❌ Sin Asignar":
+                drv_sel = None
+
+            try:
+                tot_val = float(e_total.get())
+            except ValueError:
+                tot_val = 10.00
+
+            now = datetime.now()
+            order_id = f"#PQ-M{int(time.time()) % 100000}"
+
+            new_order = {
+                "id": order_id,
+                "clientName": cname,
+                "phone": cphone,
+                "address": caddr,
+                "notes": cnotes,
+                "items": [{"name": cnotes, "price": tot_val, "quantity": 1}],
+                "total": tot_val,
+                "paymentMethod": cb_pay.get(),
+                "status": "En Camino" if drv_sel else "En Preparación",
+                "assignedDriver": drv_sel,
+                "timeStr": now.strftime("%H:%M"),
+                "dateStr": now.strftime("%d/%m/%Y"),
+                "isoDateStr": now.strftime("%Y-%m-%d")
+            }
+
+            self.orders.insert(0, new_order)
+            self.render_orders()
+
+            def push_bg():
+                try:
+                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}).encode('utf-8')
+                    req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
+                    urllib.request.urlopen(req, timeout=4)
+                except Exception:
+                    pass
+            threading.Thread(target=push_bg, daemon=True).start()
+
+            top.destroy()
+            messagebox.showinfo("Pedido Creado", f"Pedido {order_id} registrado con éxito.")
+
+            if drv_sel:
+                drv_obj = next((d for d in self.drivers if d["name"] == drv_sel), None)
+                if drv_obj:
+                    self.send_driver_whatsapp(new_order, drv_obj)
+
+        tk.Button(top, text="🚀 Registrar Pedido", bg="#f59e0b", fg="black", font=("Segoe UI", 11, "bold"), command=save_manual).pack(pady=16)
+
+    def assign_driver_to_order_dialog(self):
+        selected = self.tree_orders.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
+
+        vals = self.tree_orders.item(selected[0])["values"]
+        order_id = str(vals[0])
+        order = next((o for o in self.orders if str(o.get("id")) == order_id), None)
+        if not order:
+            return
+
+        top = tk.Toplevel(self.root)
+        top.title(f"Asignar Repartidor a Pedido {order_id}")
+        top.geometry("380x230")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text=f"🛵 Asignar Repartidor a Pedido {order_id}", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 11, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=8)
+        tk.Label(f1, text="Seleccionar Repartidor:", bg="#1e1e1e", fg="white").pack(side="left", padx=5)
+        drv_names = [d["name"] for d in self.drivers]
+        cb_drv = ttk.Combobox(f1, values=drv_names, width=22, state="readonly")
+        if drv_names:
+            cb_drv.set(drv_names[0])
+        cb_drv.pack(side="left", padx=5)
+
+        def save_assignment():
+            drv_sel = cb_drv.get()
+            if not drv_sel:
+                return messagebox.showerror("Error", "Selecciona un repartidor.")
+
+            order["assignedDriver"] = drv_sel
+            order["status"] = "En Camino"
+            self.render_orders()
+
+            def push_bg():
+                try:
+                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}).encode('utf-8')
+                    req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
+                    urllib.request.urlopen(req, timeout=4)
+                except Exception:
+                    pass
+            threading.Thread(target=push_bg, daemon=True).start()
+
+            top.destroy()
+            drv_obj = next((d for d in self.drivers if d["name"] == drv_sel), None)
+            if drv_obj:
+                self.send_driver_whatsapp(order, drv_obj)
+
+        tk.Button(top, text="💬 Confirmar y Enviar por WhatsApp", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), command=save_assignment).pack(pady=16)
+
+    def send_driver_whatsapp_notification(self):
+        selected = self.tree_orders.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
+
+        vals = self.tree_orders.item(selected[0])["values"]
+        order_id = str(vals[0])
+        order = next((o for o in self.orders if str(o.get("id")) == order_id), None)
+        if not order:
+            return
+
+        drv_name = order.get("assignedDriver")
+        if not drv_name:
+            return messagebox.showwarning("Sin Repartidor", "Este pedido aún no tiene repartidor asignado. Haz clic en '🛵 Confirmar y Asignar Repartidor'.")
+
+        drv_obj = next((d for d in self.drivers if d["name"] == drv_name), None)
+        if not drv_obj:
+            return messagebox.showerror("Error", "No se encontró el teléfono del repartidor.")
+
+        self.send_driver_whatsapp(order, drv_obj)
+
+    def send_driver_whatsapp(self, order, driver_obj):
+        phone = driver_obj.get("phone", "").replace("+", "").replace(" ", "")
+        if not phone:
+            return messagebox.showerror("Error", "El repartidor no tiene número de teléfono registrado.")
+
+        clean_phone = phone if phone.startswith("34") else "34" + phone
+        client_name = order.get("clientName", "Cliente")
+        client_phone = order.get("phone", "No especificado")
+        address = order.get("address", "Dirección no especificada")
+        total = order.get("total", 0.0)
+        pay_method = order.get("paymentMethod", "Efectivo")
+        notes = order.get("notes", "")
+
+        msg = (
+            f"🛵 *NUEVO DOMICILIO ASIGNADO* 📦\n\n"
+            f"🆔 *Pedido:* {order.get('id')}\n"
+            f"👤 *Cliente:* {client_name}\n"
+            f"📱 *Teléfono Cliente:* {client_phone}\n"
+            f"🏠 *Dirección Entrega:* {address}\n"
+            f"{f'📝 *Notas:* {notes}\n' if notes else ''}"
+            f"💰 *TOTAL A COBRAR:* {total:.2f}€ ({pay_method})\n"
+            f"💸 *Tu Comisión por Envío:* 2.00€\n\n"
+            f"⚡ *¡Por favor confirma recibido para entregar caliente!* 🔥"
+        )
+
+        webbrowser.open(f"https://wa.me/{clean_phone}?text={urllib.parse.quote(msg)}")
+
     def export_csv(self):
         try:
             filename = f"Libro_Contable_ParceQueChimba_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -700,13 +1067,15 @@ class ParceQueChimbaCRM:
                     d = json.load(f)
                     if "inventory" in d:
                         self.inventory = d["inventory"]
+                    if "drivers" in d:
+                        self.drivers = d["drivers"]
             except Exception:
                 pass
 
     def save_local_storage(self):
         try:
             with open(DATA_FILE, "w", encoding="utf-8") as f:
-                json.dump({"inventory": self.inventory}, f, ensure_ascii=False, indent=2)
+                json.dump({"inventory": self.inventory, "drivers": self.drivers}, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
 
