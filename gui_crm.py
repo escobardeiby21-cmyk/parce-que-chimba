@@ -198,35 +198,43 @@ class ParceQueChimbaCRM:
 
     # --- TAB 3: INVENTARIO ---
     def build_tab_inventory(self):
-        columns = ("id", "name", "category", "stock", "min", "unit", "status")
-        self.tree_inv = ttk.Treeview(self.tab_inventory, columns=columns, show="headings", height=16)
+        columns = ("id", "name", "category", "stock", "min", "cost", "unit", "status")
+        self.tree_inv = ttk.Treeview(self.tab_inventory, columns=columns, show="headings", height=15)
 
         self.tree_inv.heading("id", text="ID Insumo")
         self.tree_inv.heading("name", text="Nombre Insumo")
         self.tree_inv.heading("category", text="Categoría")
         self.tree_inv.heading("stock", text="Stock Actual")
         self.tree_inv.heading("min", text="Alerta Mínima")
+        self.tree_inv.heading("cost", text="Costo Unit (€)")
         self.tree_inv.heading("unit", text="Unidad")
         self.tree_inv.heading("status", text="Estado Stock")
 
-        self.tree_inv.column("id", width=90, anchor="center")
-        self.tree_inv.column("name", width=220)
-        self.tree_inv.column("category", width=130, anchor="center")
-        self.tree_inv.column("stock", width=110, anchor="center")
-        self.tree_inv.column("min", width=110, anchor="center")
-        self.tree_inv.column("unit", width=100, anchor="center")
-        self.tree_inv.column("status", width=140, anchor="center")
+        self.tree_inv.column("id", width=80, anchor="center")
+        self.tree_inv.column("name", width=200)
+        self.tree_inv.column("category", width=120, anchor="center")
+        self.tree_inv.column("stock", width=100, anchor="center")
+        self.tree_inv.column("min", width=100, anchor="center")
+        self.tree_inv.column("cost", width=110, anchor="center")
+        self.tree_inv.column("unit", width=90, anchor="center")
+        self.tree_inv.column("status", width=130, anchor="center")
 
         self.tree_inv.pack(fill="both", expand=True, pady=6)
 
         action_bar = tk.Frame(self.tab_inventory, bg="#121212")
         action_bar.pack(fill="x", pady=6)
 
-        btn_add = tk.Button(action_bar, text="➕ Sumar +5 Stock", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(5))
-        btn_add.pack(side="left", padx=5)
+        btn_add = tk.Button(action_bar, text="➕ +5 Stock", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(5))
+        btn_add.pack(side="left", padx=4)
 
-        btn_sub = tk.Button(action_bar, text="➖ Restar -1 Stock", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(-1))
-        btn_sub.pack(side="left", padx=5)
+        btn_sub = tk.Button(action_bar, text="➖ -1 Stock", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(-1))
+        btn_sub.pack(side="left", padx=4)
+
+        btn_edit = tk.Button(action_bar, text="✏️ Editar Stock / Costo (€)", bg="#3b82f6", fg="white", font=("Segoe UI", 10, "bold"), command=self.edit_selected_inventory)
+        btn_edit.pack(side="left", padx=4)
+
+        btn_reset = tk.Button(action_bar, text="🔄 Resetear TODO el Stock a 0", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.reset_all_stock_to_zero)
+        btn_reset.pack(side="left", padx=4)
 
         self.render_inventory()
 
@@ -270,16 +278,40 @@ class ParceQueChimbaCRM:
             time.sleep(3)
 
     def fetch_orders(self):
-        req = urllib.request.Request(CLOUD_URL, headers={"User-Agent": "Mozilla/5.0"})
+        cloud_orders = []
+        local_orders = []
+
+        # 1. Obtener Pedidos Globales de la Nube
         try:
-            with urllib.request.urlopen(req, timeout=5) as response:
+            req = urllib.request.Request(CLOUD_URL, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=4) as response:
                 if response.status == 200:
                     data = json.loads(response.read().decode())
-                    incoming = data.get("data", {}).get("orders", [])
-                    if isinstance(incoming, list):
-                        self.process_incoming_orders(incoming)
+                    if isinstance(data.get("data", {}).get("orders"), list):
+                        cloud_orders = data["data"]["orders"]
         except Exception:
             pass
+
+        # 2. Obtener Pedidos del Servidor Bot de WhatsApp Local
+        try:
+            req_loc = urllib.request.Request(LOCAL_URL, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req_loc, timeout=2) as response:
+                if response.status == 200:
+                    data_loc = json.loads(response.read().decode())
+                    if isinstance(data_loc.get("orders"), list):
+                        local_orders = data_loc["orders"]
+        except Exception:
+            pass
+
+        # Combinar todos los pedidos de WhatsApp y Web evitando duplicados por ID
+        merged_map = {}
+        for o in (cloud_orders + local_orders):
+            if isinstance(o, dict) and o.get("id"):
+                merged_map[o["id"]] = o
+
+        merged_list = list(merged_map.values())
+        if merged_list:
+            self.process_incoming_orders(merged_list)
 
     def manual_sync(self):
         threading.Thread(target=self.fetch_orders, daemon=True).start()
@@ -367,12 +399,14 @@ class ParceQueChimbaCRM:
 
         for i in self.inventory:
             status = "🔴 AGOTADO" if i["stock"] == 0 else ("⚠️ BAJO" if i["stock"] <= i["min"] else "🟢 ÓPTIMO")
+            cost_str = f"{i.get('unitCost', 1.00):.2f}€"
             self.tree_inv.insert("", "end", values=(
                 i["id"],
                 i["name"],
                 i["category"],
                 i["stock"],
                 i["min"],
+                cost_str,
                 i["unit"],
                 status
             ))
@@ -435,6 +469,68 @@ class ParceQueChimbaCRM:
 
         self.render_inventory()
         self.save_local_storage()
+
+    def reset_all_stock_to_zero(self):
+        if messagebox.askyesno("Confirmar Reset", "¿Deseas poner el stock de TODOS los insumos a 0 para ingresar existencias desde cero?"):
+            for i in self.inventory:
+                i["stock"] = 0
+            self.render_inventory()
+            self.save_local_storage()
+            messagebox.showinfo("Stock Reseteado", "¡Todo el stock se ha puesto a 0 con éxito!")
+
+    def edit_selected_inventory(self):
+        selected = self.tree_inv.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un insumo de la lista para editar.")
+
+        item_id = str(self.tree_inv.item(selected[0])["values"][0])
+        item = next((i for i in self.inventory if i["id"] == item_id), None)
+        if not item:
+            return
+
+        top = tk.Toplevel(self.root)
+        top.title(f"Modificar Insumo: {item['name']}")
+        top.geometry("380x320")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text=f"📦 Modificar: {item['name']}", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 11, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=5)
+        tk.Label(f1, text="Stock Actual:", bg="#1e1e1e", fg="white", width=16, anchor="e", font=("Segoe UI", 10)).pack(side="left")
+        e_stock = tk.Entry(f1, font=("Segoe UI", 10), width=12)
+        e_stock.insert(0, str(item.get("stock", 0)))
+        e_stock.pack(side="left", padx=5)
+
+        f2 = tk.Frame(top, bg="#1e1e1e")
+        f2.pack(pady=5)
+        tk.Label(f2, text="Costo Unitario (€):", bg="#1e1e1e", fg="white", width=16, anchor="e", font=("Segoe UI", 10)).pack(side="left")
+        e_cost = tk.Entry(f2, font=("Segoe UI", 10), width=12)
+        e_cost.insert(0, str(item.get("unitCost", 1.00)))
+        e_cost.pack(side="left", padx=5)
+
+        f3 = tk.Frame(top, bg="#1e1e1e")
+        f3.pack(pady=5)
+        tk.Label(f3, text="Alerta Mínima:", bg="#1e1e1e", fg="white", width=16, anchor="e", font=("Segoe UI", 10)).pack(side="left")
+        e_min = tk.Entry(f3, font=("Segoe UI", 10), width=12)
+        e_min.insert(0, str(item.get("min", 5)))
+        e_min.pack(side="left", padx=5)
+
+        def save_changes():
+            try:
+                item["stock"] = max(0, int(e_stock.get()))
+                item["unitCost"] = max(0.0, float(e_cost.get()))
+                item["min"] = max(0, int(e_min.get()))
+                self.render_inventory()
+                self.save_local_storage()
+                top.destroy()
+                messagebox.showinfo("Éxito", f"Insumo '{item['name']}' actualizado correctamente.")
+            except ValueError:
+                messagebox.showerror("Error", "Por favor ingresa números válidos.")
+
+        tk.Button(top, text="💾 Guardar Cambios", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=save_changes).pack(pady=16)
 
     def export_csv(self):
         try:
