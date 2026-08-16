@@ -1,3 +1,4 @@
 @echo off
-title Abrir App de Escritorio Que Chimba Parce
-start "" "%~dp0dist\QueChimbaParce_CRM\QueChimbaParce_CRM.exe"
+title Que Chimba Parce - App de Escritorio CRM Pro
+color 0A
+start "" pythonw gui_crm.py

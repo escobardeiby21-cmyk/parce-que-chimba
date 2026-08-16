@@ -224,17 +224,23 @@ class ParceQueChimbaCRM:
         action_bar = tk.Frame(self.tab_inventory, bg="#121212")
         action_bar.pack(fill="x", pady=6)
 
-        btn_add = tk.Button(action_bar, text="➕ +5 Stock", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(5))
-        btn_add.pack(side="left", padx=4)
+        btn_new = tk.Button(action_bar, text="➕ Agregar Insumo Nuevo", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.add_new_inventory_dialog)
+        btn_new.pack(side="left", padx=4)
 
-        btn_sub = tk.Button(action_bar, text="➖ -1 Stock", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(-1))
-        btn_sub.pack(side="left", padx=4)
-
-        btn_edit = tk.Button(action_bar, text="✏️ Editar Stock / Costo (€)", bg="#3b82f6", fg="white", font=("Segoe UI", 10, "bold"), command=self.edit_selected_inventory)
+        btn_edit = tk.Button(action_bar, text="✏️ Cambiar Cantidad / Costo (€)", bg="#3b82f6", fg="white", font=("Segoe UI", 10, "bold"), command=self.edit_selected_inventory)
         btn_edit.pack(side="left", padx=4)
 
-        btn_reset = tk.Button(action_bar, text="🔄 Resetear TODO el Stock a 0", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.reset_all_stock_to_zero)
+        btn_add = tk.Button(action_bar, text="➕ +5", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(5))
+        btn_add.pack(side="left", padx=2)
+
+        btn_sub = tk.Button(action_bar, text="➖ -1", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(-1))
+        btn_sub.pack(side="left", padx=2)
+
+        btn_reset = tk.Button(action_bar, text="🔄 Resetear TODO a 0", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.reset_all_stock_to_zero)
         btn_reset.pack(side="left", padx=4)
+
+        btn_del = tk.Button(action_bar, text="🗑️ Eliminar", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=self.delete_selected_inventory)
+        btn_del.pack(side="left", padx=4)
 
         self.render_inventory()
 
@@ -531,6 +537,100 @@ class ParceQueChimbaCRM:
                 messagebox.showerror("Error", "Por favor ingresa números válidos.")
 
         tk.Button(top, text="💾 Guardar Cambios", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=save_changes).pack(pady=16)
+
+    def add_new_inventory_dialog(self):
+        top = tk.Toplevel(self.root)
+        top.title("➕ Agregar Insumo Nuevo al Inventario")
+        top.geometry("400x380")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text="📦 Agregar Insumo Nuevo", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 12, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=4)
+        tk.Label(f1, text="Nombre Insumo:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_name = tk.Entry(f1, font=("Segoe UI", 10), width=18)
+        e_name.pack(side="left", padx=5)
+
+        f2 = tk.Frame(top, bg="#1e1e1e")
+        f2.pack(pady=4)
+        tk.Label(f2, text="Categoría:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        cb_cat = ttk.Combobox(f2, values=["Carnes", "Panes", "Bebidas", "Insumos"], width=16, state="readonly")
+        cb_cat.set("Carnes")
+        cb_cat.pack(side="left", padx=5)
+
+        f3 = tk.Frame(top, bg="#1e1e1e")
+        f3.pack(pady=4)
+        tk.Label(f3, text="Stock Inicial:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_stock = tk.Entry(f3, font=("Segoe UI", 10), width=18)
+        e_stock.insert(0, "0")
+        e_stock.pack(side="left", padx=5)
+
+        f4 = tk.Frame(top, bg="#1e1e1e")
+        f4.pack(pady=4)
+        tk.Label(f4, text="Costo Unitario (€):", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_cost = tk.Entry(f4, font=("Segoe UI", 10), width=18)
+        e_cost.insert(0, "1.00")
+        e_cost.pack(side="left", padx=5)
+
+        f5 = tk.Frame(top, bg="#1e1e1e")
+        f5.pack(pady=4)
+        tk.Label(f5, text="Alerta Mínima:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        e_min = tk.Entry(f5, font=("Segoe UI", 10), width=18)
+        e_min.insert(0, "5")
+        e_min.pack(side="left", padx=5)
+
+        f6 = tk.Frame(top, bg="#1e1e1e")
+        f6.pack(pady=4)
+        tk.Label(f6, text="Unidad:", bg="#1e1e1e", fg="white", width=16, anchor="e").pack(side="left")
+        cb_unit = ttk.Combobox(f6, values=["unidades", "kg", "latas", "raciones"], width=16, state="readonly")
+        cb_unit.set("unidades")
+        cb_unit.pack(side="left", padx=5)
+
+        def save_new():
+            name = e_name.get().strip()
+            if not name:
+                return messagebox.showerror("Error", "Ingresa un nombre para el insumo.")
+            try:
+                stock_val = max(0, int(e_stock.get()))
+                cost_val = max(0.0, float(e_cost.get()))
+                min_val = max(0, int(e_min.get()))
+
+                new_item = {
+                    "id": f"inv_{int(time.time())}",
+                    "name": name,
+                    "category": cb_cat.get(),
+                    "stock": stock_val,
+                    "min": min_val,
+                    "unitCost": cost_val,
+                    "unit": cb_unit.get()
+                }
+                self.inventory.append(new_item)
+                self.render_inventory()
+                self.save_local_storage()
+                top.destroy()
+                messagebox.showinfo("Éxito", f"Insumo '{name}' agregado con {stock_val} {cb_unit.get()}!")
+            except ValueError:
+                messagebox.showerror("Error", "Ingresa valores numéricos válidos en Stock, Costo y Alerta Mínima.")
+
+        tk.Button(top, text="➕ Agregar Insumo", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=save_new).pack(pady=16)
+
+    def delete_selected_inventory(self):
+        selected = self.tree_inv.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un insumo de la lista para eliminar.")
+
+        vals = self.tree_inv.item(selected[0])["values"]
+        item_id = str(vals[0])
+        item_name = str(vals[1])
+
+        if messagebox.askyesno("Eliminar Insumo", f"¿Seguro que deseas eliminar '{item_name}' del inventario?"):
+            self.inventory = [i for i in self.inventory if i["id"] != item_id]
+            self.render_inventory()
+            self.save_local_storage()
+            messagebox.showinfo("Eliminado", f"Insumo '{item_name}' eliminado.")
 
     def export_csv(self):
         try:
