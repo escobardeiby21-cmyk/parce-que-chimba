@@ -419,7 +419,7 @@ class ParceQueChimbaCRM:
         self.orders = new_orders
         self.save_local_storage()
 
-        # Reproducir timbre si entra un pedido nuevo
+        # Reproducir timbre si entra un pedido nuevo y notificar al servidor local para enviarlo por WhatsApp al móvil de la dueña
         if has_new and not self.is_initial_load:
             try:
                 self.root.bell()
@@ -430,6 +430,15 @@ class ParceQueChimbaCRM:
                     winsound.Beep(1900, 400)
             except Exception:
                 pass
+
+            def notify_wpp_bg():
+                try:
+                    payload_bytes = json.dumps({"orders": self.orders}).encode('utf-8')
+                    req_loc = urllib.request.Request(LOCAL_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="POST")
+                    urllib.request.urlopen(req_loc, timeout=3)
+                except Exception:
+                    pass
+            threading.Thread(target=notify_wpp_bg, daemon=True).start()
 
         self.is_initial_load = False
         self.root.after(0, self.render_all)

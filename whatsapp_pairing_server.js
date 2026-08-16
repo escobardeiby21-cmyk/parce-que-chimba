@@ -91,18 +91,23 @@ const server = http.createServer(async (req, res) => {
 
               // Si el bot de WhatsApp está enlazado y listo, enviar notificación por chat de WhatsApp al número del negocio
               if (isReady && client) {
+                const itemsText = (latest.items || []).map(i => `• ${i.quantity || 1}x ${i.name} (${((i.price || 0) * (i.quantity || 1)).toFixed(2)}€)`).join('\n');
                 const ownerText = `🔔 *¡NUEVO PEDIDO RECIBIDO DESDE LA WEB!* 🌐\n\n` +
                   `🆔 *Pedido:* ${latest.id}\n` +
                   `👤 *Cliente:* ${latest.clientName || 'Cliente Web'}\n` +
                   `📱 *Teléfono:* ${latest.phone || 'No especificado'}\n` +
                   `🏠 *Dirección:* ${latest.address || 'Para recoger / Domicilio'}\n` +
-                  `${latest.notes ? `📝 *Notas:* ${latest.notes}\n` : ''}` +
+                  `${latest.notes ? `📝 *Notas:* ${latest.notes}\n` : ''}\n` +
+                  `🍔 *Productos:* \n${itemsText || '1x Pedido Web'}\n\n` +
                   `💰 *TOTAL A PAGAR:* ${(latest.total || 0).toFixed(2)}€ (${latest.paymentMethod || 'Efectivo'})\n\n` +
-                  `✅ *REGISTRADO EN TIEMPO REAL EN EL PANEL ADMIN.* 🚀`;
+                  `🚀 *¡Confírmalo y notifica al cliente con 1-clic desde la App de Escritorio!*`;
                 
                 try {
-                  const targetJid = client.info?.wid?._serialized || '34603959537@c.us';
+                  const targetJid = '34603959537@c.us';
                   client.sendMessage(targetJid, ownerText).catch(() => {});
+                  if (client.info?.wid?._serialized && client.info.wid._serialized !== targetJid) {
+                    client.sendMessage(client.info.wid._serialized, ownerText).catch(() => {});
+                  }
                 } catch(errWpp) {}
               }
             }

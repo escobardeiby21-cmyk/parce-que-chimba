@@ -1,4 +1,30 @@
 {
-  "orders": [],
+  "orders": [
+    {
+      "id": "#PQ-784884",
+      "source": "WhatsApp Ticket 📱",
+      "clientName": "Jhon peña",
+      "phone": "343104590567",
+      "address": "Urbanización Jardín de la Fachada, Rufino J. Cuervo, Comuna Rufino J. Cuervo (� GPS: https://maps.google.com/?q=4.5193682,-75.7188495)",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Pedido por WhatsApp",
+          "price": 10,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 8,
+      "deliveryFee": 2,
+      "total": 10,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "Devuelta de 2 mil jaja",
+      "timeStr": "23:10",
+      "timestamp": "2026-08-16T21:10:59.640Z",
+      "dateStr": "16/8/2026",
+      "isoDateStr": "2026-08-16"
+    }
+  ],
   "isOpen": true
 }
