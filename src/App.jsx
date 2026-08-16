@@ -1828,6 +1828,53 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                   </div>
                 </div>
 
+                {/* Control de Activación / Desactivación del Chatbot IA de WhatsApp + Botón de Limpieza de Caché para PC HP */}
+                <div className="bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800 space-y-3 mb-4">
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                    <div>
+                      <span className="text-xs text-gray-400 font-bold block">Chatbot IA de WhatsApp:</span>
+                      <span className={`text-sm font-black flex items-center gap-1.5 ${isChatbotEnabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span>{isChatbotEnabled ? '🟢 CHATBOT ACTIVO (Responde Automáticamente)' : '🔴 CHATBOT DESACTIVADO (Atención Manual)'}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextState = !isChatbotEnabled;
+                          setIsChatbotEnabled(nextState);
+                          localStorage.setItem('pq_chimba_chatbot_enabled', JSON.stringify(nextState));
+                          saveOrdersToCloudAndLocal(ordersHistory, isBusinessOpen, true);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer shadow ${
+                          isChatbotEnabled 
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400' 
+                            : 'bg-red-600 hover:bg-red-500 text-white border-red-400'
+                        }`}
+                      >
+                        {isChatbotEnabled ? '🔴 DESACTIVAR CHATBOT IA' : '🟢 ACTIVAR CHATBOT IA'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(regs => {
+                              regs.forEach(r => r.unregister());
+                            });
+                          }
+                          localStorage.removeItem('pq_chimba_orders');
+                          window.location.reload(true);
+                        }}
+                        className="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-xl font-black text-xs cursor-pointer shadow border border-amber-300 active:scale-95 transition-transform"
+                      >
+                        🔄 Limpiar Caché HP / Actualizar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* NAVEGACIÓN PRINCIPAL SUITE EMPRESARIAL / CRM / INVENTARIO */}
                 <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-3 mb-4">
                   {[
