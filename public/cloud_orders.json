@@ -1,30 +1,22 @@
 {
   "orders": [
     {
-      "id": "#PQ-784884",
-      "source": "WhatsApp Ticket 📱",
-      "clientName": "Jhon peña",
-      "phone": "343104590567",
-      "address": "Urbanización Jardín de la Fachada, Rufino J. Cuervo, Comuna Rufino J. Cuervo (� GPS: https://maps.google.com/?q=4.5193682,-75.7188495)",
+      "id": "#PQ-TEST99",
+      "clientName": "Cliente Prueba Web",
+      "phone": "6345487664",
+      "address": "Calle Test 123",
       "paymentMethod": "Efectivo",
       "items": [
         {
-          "name": "Pedido por WhatsApp",
-          "price": 10,
+          "name": "Hamburguesa Clásica",
+          "price": 6,
           "quantity": 1
         }
       ],
-      "subtotal": 8,
+      "subtotal": 6,
       "deliveryFee": 2,
-      "total": 10,
-      "status": "En Preparación",
-      "assignedDriver": null,
-      "notes": "Devuelta de 2 mil jaja",
-      "timeStr": "23:10",
-      "timestamp": "2026-08-16T21:10:59.640Z",
-      "dateStr": "16/8/2026",
-      "isoDateStr": "2026-08-16"
+      "total": 8,
+      "status": "En Preparación"
     }
-  ],
-  "isOpen": true
+  ]
 }

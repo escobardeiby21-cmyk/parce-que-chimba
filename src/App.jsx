@@ -3236,10 +3236,10 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
 
               <div className="bg-emerald-950/80 border border-emerald-700/80 p-3.5 rounded-2xl text-emerald-300 text-xs font-semibold space-y-1">
                 <p className="font-bold flex items-center justify-center gap-1">
-                  <span>🛵</span> <span>¡Tu pedido ya está en preparación caliente en la cocina!</span>
+                  <span>✅</span> <span>¡TU PEDIDO YA FUE ENVIADO AL RESTAURANTE!</span>
                 </p>
                 <p className="text-[11px] text-emerald-400/90">
-                  Tiempo estimado: 25 a 35 minutos. Te contactaremos al número <strong>{submittedOrderModal.phone}</strong>.
+                  Ya está registrado en la cocina y sonando en el sistema. Tiempo estimado: 25 a 35 min. Te llamaremos al <strong>{submittedOrderModal.phone}</strong>.
                 </p>
               </div>
 
