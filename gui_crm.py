@@ -43,7 +43,7 @@ class ParceQueChimbaCRM:
         # Estado Global
         self.orders = []
         self.known_order_ids = set()
-        self.deleted_order_ids = set()
+        self.deleted_order_ids = {"WPP-2240", "WPP-1990", "WPP-8355"}
         self.is_initial_load = True
         self.is_business_open = True
         self.is_chatbot_enabled = False
@@ -1307,7 +1307,7 @@ class ParceQueChimbaCRM:
                     if "drivers" in d:
                         self.drivers = d["drivers"]
                     if "deleted_ids" in d and isinstance(d["deleted_ids"], list):
-                        self.deleted_order_ids = set(d["deleted_ids"])
+                        self.deleted_order_ids.update(d["deleted_ids"])
             except Exception:
                 pass
 
