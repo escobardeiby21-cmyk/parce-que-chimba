@@ -18,6 +18,7 @@ if (process.env.OPENAI_API_KEY) {
 let currentQrDataUrl = null;
 let isReady = false;
 let sseClients = [];
+let isChatbotEnabled = false; // Chatbot deshabilitado por defecto para dar control total al dueño
 const sentNotifyOrdersSet = new Set();
 
 function broadcastSSEEvent(eventType, data) {
@@ -76,6 +77,10 @@ const server = http.createServer(async (req, res) => {
       req.on('end', () => {
         try {
           const payload = bodyStr ? JSON.parse(bodyStr) : { orders: [], isOpen: true };
+          if (typeof payload.isChatbotEnabled === 'boolean') {
+            isChatbotEnabled = payload.isChatbotEnabled;
+            console.log(`⚙️ Estado del Chatbot IA cambiado a: ${isChatbotEnabled ? '🟢 ACTIVO' : '🔴 DESACTIVADO'}`);
+          }
           fs.writeFileSync(localPath, JSON.stringify(payload, null, 2));
 
           if (payload && Array.isArray(payload.orders) && payload.orders.length > 0) {
@@ -721,6 +726,11 @@ client.on('message', async (msg) => {
     if (msg.fromMe) return;
     if (msg.from.includes('status@broadcast')) return; // Ignorar historias
     if (msg.from.endsWith('@g.us')) return; // Ignorar chats grupales de WhatsApp
+
+    // Si el chatbot está DESACTIVADO por el administrador, no responder automáticamente para permitir atención manual
+    if (!isChatbotEnabled) {
+      return;
+    }
 
     // 1. RECEPCIÓN DE UBICACIÓN GPS DIRECTA POR WHATSAPP (1-CLIC DE ENVIAR UBICACIÓN)
     if (msg.type === 'location') {

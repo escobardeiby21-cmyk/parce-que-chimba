@@ -140,7 +140,47 @@ function App() {
   const [adminTimeFilter, setAdminTimeFilter] = useState('all'); // 'all' (Todos los Pedidos en Vivo), 'shift', 'today', 'specific'
   const [liveOrdersFilter, setLiveOrdersFilter] = useState('pending'); // 'pending' (Solo Activos en Cocina) | 'all' (Todos)
   const [selectedCustomDate, setSelectedCustomDate] = useState(new Date().toISOString().slice(0,10));
-  const [adminTab, setAdminTab] = useState('sales'); // 'sales' o 'drivers'
+  const [adminTab, setAdminTab] = useState('sales'); // 'sales' | 'crm' | 'inventory' | 'drivers' | 'reports'
+  const [isChatbotEnabled, setIsChatbotEnabled] = useState(() => {
+    return localStorage.getItem('pq_chimba_chatbot_enabled') === 'true';
+  });
+
+  const defaultInventory = [
+    { id: 'inv1', name: 'Pan Brioche Hamburguesa', category: 'Panes', stock: 45, minStock: 15, unitCost: 0.60, unit: 'unidades' },
+    { id: 'inv2', name: 'Carne Hamburguesa 150g', category: 'Carnes', stock: 50, minStock: 20, unitCost: 1.50, unit: 'unidades' },
+    { id: 'inv3', name: 'Salchicha Perro Caliente', category: 'Carnes', stock: 30, minStock: 10, unitCost: 0.80, unit: 'unidades' },
+    { id: 'inv4', name: 'Patatas Fritas Congeladas', category: 'Insumos', stock: 25, minStock: 8, unitCost: 2.20, unit: 'kg' },
+    { id: 'inv5', name: 'Chicharrón al Barril', category: 'Carnes', stock: 12, minStock: 4, unitCost: 8.50, unit: 'kg' },
+    { id: 'inv6', name: 'Costilla al Barril', category: 'Carnes', stock: 15, minStock: 5, unitCost: 9.00, unit: 'kg' },
+    { id: 'inv7', name: 'Longaniza Paisa', category: 'Carnes', stock: 35, minStock: 12, unitCost: 1.10, unit: 'unidades' },
+    { id: 'inv8', name: 'Postobón Manzana', category: 'Bebidas', stock: 48, minStock: 12, unitCost: 0.90, unit: 'latas' },
+    { id: 'inv9', name: 'Postobón Colombiana', category: 'Bebidas', stock: 36, minStock: 10, unitCost: 0.90, unit: 'latas' },
+    { id: 'inv10', name: 'Coca-Cola 330ml', category: 'Bebidas', stock: 60, minStock: 15, unitCost: 0.70, unit: 'latas' },
+    { id: 'inv11', name: 'Pulpa Maracuyá', category: 'Bebidas', stock: 20, minStock: 6, unitCost: 1.20, unit: 'raciones' },
+    { id: 'inv12', name: 'Pulpa Lulo', category: 'Bebidas', stock: 18, minStock: 6, unitCost: 1.20, unit: 'raciones' }
+  ];
+
+  const [inventory, setInventory] = useState(() => {
+    return safeJsonParse('pq_chimba_inventory', defaultInventory);
+  });
+
+  const [newInvItem, setNewInvItem] = useState({ name: '', category: 'Carnes', stock: 10, minStock: 5, unitCost: 1.00, unit: 'unidades' });
+
+  const saveInventory = (newList) => {
+    setInventory(newList);
+    localStorage.setItem('pq_chimba_inventory', JSON.stringify(newList));
+  };
+
+  const updateStock = (id, delta) => {
+    const updated = inventory.map(item => {
+      if (item.id === id) {
+        const newStock = Math.max(0, item.stock + delta);
+        return { ...item, stock: newStock };
+      }
+      return item;
+    });
+    saveInventory(updated);
+  };
 
   // Modal de Detalle de Domicilios por Liquidar / Liquidados
   const [payoutDetailModal, setPayoutDetailModal] = useState(null); // { driverName, filterType: 'pending'|'settled' }
@@ -641,7 +681,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     setOrdersHistory(finalOrdersList);
     localStorage.setItem('pq_chimba_orders', JSON.stringify(finalOrdersList));
 
-    const payloadStr = JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus });
+    const payloadStr = JSON.stringify({ orders: finalOrdersList, isOpen: currentOpenStatus, isChatbotEnabled });
 
     // 1. Guardar en Vercel Backend /api/orders (Aislado de excepciones de Chrome)
     try {
@@ -1788,6 +1828,31 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                   </div>
                 </div>
 
+                {/* NAVEGACIÓN PRINCIPAL SUITE EMPRESARIAL / CRM / INVENTARIO */}
+                <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-3 mb-4">
+                  {[
+                    { id: 'sales', icon: '⚡', label: 'Pedidos & Cocina' },
+                    { id: 'crm', icon: '👥', label: 'CRM Clientes' },
+                    { id: 'inventory', icon: '📦', label: 'Inventario' },
+                    { id: 'drivers', icon: '🛵', label: 'Repartidores' },
+                    { id: 'reports', icon: '📊', label: 'Contabilidad' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setAdminTab(tab.id)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                        adminTab === tab.id
+                          ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)] scale-105'
+                          : 'bg-black/60 text-gray-400 border border-gray-800 hover:border-gray-700 hover:text-white'
+                      }`}
+                    >
+                      <span>{tab.icon}</span>
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
                 {adminTab === 'sales' ? (
                     /* TAB 1: GESTIÓN DE PEDIDOS EN VIVO & CONTABILIDAD */
                     <div className="space-y-6">
@@ -2509,6 +2574,306 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                               </div>
                             ))
                           )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* TAB 2: CRM DE CLIENTES */}
+              {adminTab === 'crm' && (
+                <div className="space-y-4">
+                  <div className="bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800 flex justify-between items-center flex-wrap gap-2">
+                    <div>
+                      <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                        <span>👥</span> CRM Directorio de Clientes ({(() => {
+                          const uniquePhones = new Set(ordersHistory.map(o => o.phone).filter(Boolean));
+                          return uniquePhones.size;
+                        })()})
+                      </h3>
+                      <p className="text-xs text-gray-400">Base de datos automatizada extraída en tiempo real de todos los pedidos.</p>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const clientMap = new Map();
+                    ordersHistory.forEach(o => {
+                      if (!o.phone) return;
+                      const key = o.phone;
+                      if (!clientMap.has(key)) {
+                        clientMap.set(key, {
+                          phone: o.phone,
+                          name: o.clientName || 'Cliente',
+                          address: o.address || '',
+                          totalOrders: 0,
+                          totalSpent: 0,
+                          lastDate: o.dateStr || '',
+                          itemsCount: {}
+                        });
+                      }
+                      const c = clientMap.get(key);
+                      c.totalOrders += 1;
+                      c.totalSpent += (o.total || 0);
+                      if (Array.isArray(o.items)) {
+                        o.items.forEach(i => {
+                          if (i.name) c.itemsCount[i.name] = (c.itemsCount[i.name] || 0) + (i.quantity || 1);
+                        });
+                      }
+                    });
+
+                    const clientList = Array.from(clientMap.values()).sort((a, b) => b.totalSpent - a.totalSpent);
+
+                    if (clientList.length === 0) {
+                      return (
+                        <div className="bg-[#181818] p-8 rounded-2xl border border-gray-800 text-center text-gray-500 text-xs">
+                          Aún no hay clientes registrados en la base de datos CRM. Se poblará automáticamente al recibir pedidos.
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {clientList.map((client, idx) => {
+                          const isVip = client.totalOrders >= 3 || client.totalSpent >= 40;
+                          const isFrequent = client.totalOrders >= 2 && !isVip;
+                          const favItem = Object.entries(client.itemsCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Hamburguesa Clásica';
+                          const cleanPhone = client.phone.replace(/\s+/g, '').replace('+', '');
+
+                          return (
+                            <div key={idx} className="bg-[#181818] p-4 rounded-2xl border border-gray-800 space-y-2 hover:border-amber-500/40 transition-colors">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-black text-sm text-white flex items-center gap-2">
+                                    <span>👤 {client.name}</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase ${
+                                      isVip 
+                                        ? 'bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.5)]' 
+                                        : (isFrequent ? 'bg-emerald-950 text-emerald-400 border border-emerald-700' : 'bg-gray-800 text-gray-400')
+                                    }`}>
+                                      {isVip ? '🌟 VIP' : (isFrequent ? '🛵 Frecuente' : '🆕 Nuevo')}
+                                    </span>
+                                  </h4>
+                                  <span className="text-xs text-gray-400 font-mono">📱 {client.phone}</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-sm font-black text-emerald-400 block">{client.totalSpent.toFixed(2)}€</span>
+                                  <span className="text-[10px] text-gray-400">{client.totalOrders} pedido{client.totalOrders > 1 ? 's' : ''}</span>
+                                </div>
+                              </div>
+
+                              <div className="text-xs text-gray-300 bg-black/40 p-2.5 rounded-xl border border-gray-800 space-y-1">
+                                <p className="truncate">📍 <strong>Dirección:</strong> {client.address}</p>
+                                <p className="text-amber-300 text-[11px]">🍔 <strong>Plato Favorito:</strong> {favItem}</p>
+                              </div>
+
+                              <div className="flex gap-2 pt-1">
+                                <a
+                                  href={`https://wa.me/${cleanPhone.startsWith('34') ? cleanPhone : '34' + cleanPhone}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-transform active:scale-95"
+                                >
+                                  <span>💬</span> Chat WhatsApp
+                                </a>
+                                <a
+                                  href={`https://wa.me/${cleanPhone.startsWith('34') ? cleanPhone : '34' + cleanPhone}?text=${encodeURIComponent(`¡Hola ${client.name}! 🤠🔥 En Que Chimba Parce te premiamos por tu fidelidad. ¡Te regalamos las patatas en tu próximo pedido!`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-amber-500 hover:bg-amber-400 text-black font-black px-3 py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-transform active:scale-95"
+                                >
+                                  🎁 Enviar Oferta
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* TAB 3: GESTIÓN DE INVENTARIO */}
+              {adminTab === 'inventory' && (
+                <div className="space-y-4">
+                  <div className="bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800 flex justify-between items-center flex-wrap gap-2">
+                    <div>
+                      <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                        <span>📦</span> Control de Inventario & Insumos
+                      </h3>
+                      <p className="text-xs text-gray-400">Supervisa las existencias de carnes, panes, salsas y bebidas.</p>
+                    </div>
+                    <div className="flex gap-2 text-xs font-bold">
+                      <span className="bg-emerald-950 text-emerald-400 border border-emerald-700 px-2.5 py-1 rounded-xl">
+                        🟢 Stock Óptimo ({inventory.filter(i => i.stock > i.minStock).length})
+                      </span>
+                      <span className="bg-amber-950 text-amber-400 border border-amber-700 px-2.5 py-1 rounded-xl">
+                        ⚠️ Stock Bajo ({inventory.filter(i => i.stock <= i.minStock && i.stock > 0).length})
+                      </span>
+                      <span className="bg-red-950 text-red-400 border border-red-700 px-2.5 py-1 rounded-xl">
+                        🔴 Agotado ({inventory.filter(i => i.stock === 0).length})
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Formulario para agregar insumo nuevo */}
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newInvItem.name) return alert('Ingresa el nombre del insumo');
+                    const item = { ...newInvItem, id: 'inv_' + Date.now() };
+                    saveInventory([...inventory, item]);
+                    setNewInvItem({ name: '', category: 'Carnes', stock: 10, minStock: 5, unitCost: 1.00, unit: 'unidades' });
+                  }} className="bg-[#181818] p-4 rounded-2xl border border-gray-800 grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+                    <input
+                      type="text"
+                      placeholder="Nombre insumo..."
+                      value={newInvItem.name}
+                      onChange={e => setNewInvItem({ ...newInvItem, name: e.target.value })}
+                      className="bg-black border border-gray-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 sm:col-span-2"
+                    />
+                    <select
+                      value={newInvItem.category}
+                      onChange={e => setNewInvItem({ ...newInvItem, category: e.target.value })}
+                      className="bg-black border border-gray-700 rounded-xl px-3 py-2 text-white outline-none"
+                    >
+                      <option value="Carnes">🥩 Carnes</option>
+                      <option value="Panes">🍞 Panes</option>
+                      <option value="Bebidas">🥤 Bebidas</option>
+                      <option value="Insumos">🍟 Insumos</option>
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Stock inicial"
+                      value={newInvItem.stock}
+                      onChange={e => setNewInvItem({ ...newInvItem, stock: parseInt(e.target.value) || 0 })}
+                      className="bg-black border border-gray-700 rounded-xl px-3 py-2 text-white outline-none"
+                    />
+                    <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black font-black py-2 rounded-xl text-xs cursor-pointer shadow">
+                      ➕ Agregar Insumo
+                    </button>
+                  </form>
+
+                  {/* Lista de Insumos */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {inventory.map(item => {
+                      const isLow = item.stock <= item.minStock && item.stock > 0;
+                      const isOut = item.stock === 0;
+
+                      return (
+                        <div key={item.id} className={`bg-[#181818] p-4 rounded-2xl border transition-all ${
+                          isOut ? 'border-red-600/60 bg-red-950/10' : (isLow ? 'border-amber-500/60 bg-amber-950/10' : 'border-gray-800')
+                        }`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">{item.category}</span>
+                              <h4 className="font-black text-sm text-white">{item.name}</h4>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                              isOut ? 'bg-red-600 text-white border-red-400' : (isLow ? 'bg-amber-500 text-black border-amber-300' : 'bg-emerald-950 text-emerald-400 border-emerald-700')
+                            }`}>
+                              {isOut ? '🔴 AGOTADO' : (isLow ? '⚠️ STOCK BAJO' : '🟢 ÓPTIMO')}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center my-3 bg-black/50 p-2.5 rounded-xl border border-gray-800">
+                            <span className="text-xs text-gray-400">Cantidad Actual:</span>
+                            <span className="text-xl font-black text-white font-mono">{item.stock} <span className="text-xs text-gray-400 font-normal">{item.unit}</span></span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => updateStock(item.id, -5)}
+                              className="bg-gray-800 hover:bg-gray-700 text-white font-black px-2.5 py-1.5 rounded-xl text-xs cursor-pointer active:scale-95"
+                            >
+                              -5
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateStock(item.id, -1)}
+                              className="bg-gray-800 hover:bg-gray-700 text-white font-black px-3 py-1.5 rounded-xl text-xs cursor-pointer active:scale-95"
+                            >
+                              -1
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateStock(item.id, 1)}
+                              className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-black py-1.5 rounded-xl text-xs cursor-pointer active:scale-95 shadow"
+                            >
+                              +1 Stock
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateStock(item.id, 10)}
+                              className="bg-emerald-700 hover:bg-emerald-600 text-white font-black px-2.5 py-1.5 rounded-xl text-xs cursor-pointer active:scale-95"
+                            >
+                              +10
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: CONTABILIDAD & REPORTES FINANCIEROS */}
+              {adminTab === 'reports' && (
+                <div className="space-y-6">
+                  {(() => {
+                    const todayStr = new Date().toLocaleDateString('es-ES');
+                    let filtered = ordersHistory;
+                    if (adminTimeFilter === 'today') filtered = ordersHistory.filter(o => o.dateStr === todayStr);
+                    if (adminTimeFilter === 'specific') filtered = ordersHistory.filter(o => o.isoDateStr === selectedCustomDate);
+
+                    const totalSales = filtered.reduce((s, o) => s + (o.total || 0), 0);
+                    const totalCash = filtered.filter(o => o.paymentMethod === 'Efectivo').reduce((s, o) => s + (o.total || 0), 0);
+                    const totalBizum = filtered.filter(o => o.paymentMethod === 'Bizum').reduce((s, o) => s + (o.total || 0), 0);
+                    const totalDriverCost = filtered.filter(o => o.assignedDriver).length * 2.00;
+                    const netProfit = totalSales - totalDriverCost;
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="bg-[#1e1e1e] p-4 rounded-2xl border border-gray-800 flex justify-between items-center flex-wrap gap-2">
+                          <div>
+                            <h3 className="text-base font-black text-amber-400 flex items-center gap-2">
+                              <span>📊</span> Balance Contable & Reportes Financieros
+                            </h3>
+                            <p className="text-xs text-gray-400">Resumen detallado de ingresos, medios de pago y costos operativos.</p>
+                          </div>
+                          <button
+                            onClick={exportToCSV}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow cursor-pointer transition-transform active:scale-95"
+                          >
+                            <span>📥</span> Exportar a Excel (CSV)
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="bg-[#181818] p-4 rounded-2xl border border-gray-800">
+                            <span className="text-xs text-gray-400 font-bold block mb-1">Ventas Totales</span>
+                            <span className="text-2xl font-black text-amber-400 font-mono">{totalSales.toFixed(2)}€</span>
+                            <span className="text-[10px] text-gray-500 block mt-1">{filtered.length} pedidos procesados</span>
+                          </div>
+
+                          <div className="bg-[#181818] p-4 rounded-2xl border border-gray-800">
+                            <span className="text-xs text-emerald-400 font-bold block mb-1">Efectivo Recibido</span>
+                            <span className="text-2xl font-black text-emerald-400 font-mono">{totalCash.toFixed(2)}€</span>
+                            <span className="text-[10px] text-gray-500 block mt-1">{filtered.filter(o => o.paymentMethod === 'Efectivo').length} pedidos en metálico</span>
+                          </div>
+
+                          <div className="bg-[#181818] p-4 rounded-2xl border border-gray-800">
+                            <span className="text-xs text-blue-400 font-bold block mb-1">Cobrado por Bizum</span>
+                            <span className="text-2xl font-black text-blue-400 font-mono">{totalBizum.toFixed(2)}€</span>
+                            <span className="text-[10px] text-gray-500 block mt-1">{filtered.filter(o => o.paymentMethod === 'Bizum').length} pedidos por transferencia</span>
+                          </div>
+
+                          <div className="bg-[#181818] p-4 rounded-2xl border border-gray-800">
+                            <span className="text-xs text-purple-400 font-bold block mb-1">Ganancia Estimada</span>
+                            <span className="text-2xl font-black text-purple-400 font-mono">{netProfit.toFixed(2)}€</span>
+                            <span className="text-[10px] text-gray-500 block mt-1">Deduciendo {totalDriverCost.toFixed(2)}€ envíos</span>
+                          </div>
                         </div>
                       </div>
                     );
