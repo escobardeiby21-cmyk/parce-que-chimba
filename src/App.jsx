@@ -3221,11 +3221,11 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
               className="bg-[#141414] border-2 border-[var(--color-brand-orange)] text-white w-full max-w-md rounded-3xl p-6 relative shadow-[0_0_50px_rgba(255,107,0,0.4)] text-center space-y-4 font-sans"
             >
               <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-lg animate-bounce">
-                🎉
+                📲
               </div>
 
               <h3 className="text-xl font-black text-[var(--color-brand-yellow)] uppercase tracking-wide">
-                ¡Pedido Recibido con Éxito!
+                📲 ¡ÚLTIMO PASO: ENVIAR POR WHATSAPP!
               </h3>
 
               <div className="bg-black/60 p-3 rounded-2xl border border-gray-800 space-y-1">
@@ -3252,12 +3252,12 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                 </div>
               </div>
 
-              <div className="bg-amber-950/90 border-2 border-amber-500 p-4 rounded-2xl text-amber-200 text-xs font-semibold space-y-2 text-left shadow-lg">
-                <p className="font-black text-amber-400 text-sm flex items-center gap-1.5 uppercase">
-                  <span>⚠️</span> PASO OBLIGATORIO PARA CONFIRMAR:
+              <div className="bg-red-950/90 border-2 border-red-500 p-4 rounded-2xl text-red-100 text-xs font-semibold space-y-2 text-left shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                <p className="font-black text-red-400 text-sm flex items-center gap-1.5 uppercase tracking-wide">
+                  <span>🛑</span> TU PEDIDO AÚN NO HA SIDO RECIBIDO
                 </p>
-                <p className="text-[12px] leading-relaxed text-amber-100 font-medium">
-                  Para que la cocina reciba y prepare tu pedido, <strong>DEBES presionar el botón verde de abajo para enviar tu boleto por WhatsApp</strong>. ¡Sin este mensaje en WhatsApp el pedido no se prepara!
+                <p className="text-[12px] leading-relaxed text-red-100 font-medium">
+                  Para que la dueña reciba tu boleto y la cocina empiece a preparar tu comida, <strong>DEBES presionar el botón verde de abajo para enviarlo a su WhatsApp (+34 603 95 95 37)</strong>. ¡Sin el mensaje de WhatsApp el restaurante NO se entera de tu pedido!
                 </p>
               </div>
 
