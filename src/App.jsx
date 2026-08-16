@@ -2831,13 +2831,38 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSubmittedOrderModal(null)}
-                className="w-full bg-gradient-to-r from-[var(--color-brand-orange)] to-[var(--color-brand-yellow)] text-black font-black py-3.5 rounded-2xl text-sm shadow-xl cursor-pointer hover:scale-[1.02] transition-transform"
-              >
-                🛍️ Volver al Menú Principal
-              </button>
+              <div className="flex flex-col gap-2 pt-1">
+                <a
+                  href={`https://wa.me/34603959537?text=${encodeURIComponent(
+                    `*¡Hola! Quiero hacer un pedido en Parce Que Chimba*\n\n` +
+                    `*Mis Datos:*\n` +
+                    `👤 Nombre: ${submittedOrderModal.clientName}\n` +
+                    `🏠 Dirección: ${submittedOrderModal.address}\n` +
+                    `📱 Teléfono: ${submittedOrderModal.phone}\n` +
+                    `💳 Método de Pago: ${submittedOrderModal.paymentMethod}\n` +
+                    `${submittedOrderModal.notes ? `📝 Notas: ${submittedOrderModal.notes}\n` : ''}\n` +
+                    `*Mi Pedido (${submittedOrderModal.id}):*\n` +
+                    (Array.isArray(submittedOrderModal.items) ? submittedOrderModal.items : []).map(i => `${i.quantity || 1}x ${i.name} (${((i.price || 0) * (i.quantity || 1)).toFixed(2)}€)`).join('\n') +
+                    `\n\n*Subtotal:* ${submittedOrderModal.subtotal.toFixed(2)}€\n` +
+                    `*🛵 Domicilio:* ${submittedOrderModal.deliveryFee.toFixed(2)}€\n` +
+                    `*Total a pagar: ${submittedOrderModal.total.toFixed(2)}€*`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-transform active:scale-95 border border-emerald-400/40"
+                >
+                  <span>💬</span>
+                  <span>Enviar Confirmación a WhatsApp (+34 603 95 95 37)</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setSubmittedOrderModal(null)}
+                  className="w-full bg-gradient-to-r from-[var(--color-brand-orange)] to-[var(--color-brand-yellow)] text-black font-black py-3 rounded-2xl text-xs shadow-xl cursor-pointer hover:scale-[1.02] transition-transform"
+                >
+                  🛍️ Volver al Menú Principal
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

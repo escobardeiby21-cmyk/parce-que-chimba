@@ -18,6 +18,7 @@ if (process.env.OPENAI_API_KEY) {
 let currentQrDataUrl = null;
 let isReady = false;
 let sseClients = [];
+const sentNotifyOrdersSet = new Set();
 
 function broadcastSSEEvent(eventType, data) {
   const payload = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -76,6 +77,31 @@ const server = http.createServer(async (req, res) => {
         try {
           const payload = bodyStr ? JSON.parse(bodyStr) : { orders: [], isOpen: true };
           fs.writeFileSync(localPath, JSON.stringify(payload, null, 2));
+
+          if (payload && Array.isArray(payload.orders) && payload.orders.length > 0) {
+            const latest = payload.orders[0];
+            if (latest && latest.id && !sentNotifyOrdersSet.has(latest.id)) {
+              sentNotifyOrdersSet.add(latest.id);
+              broadcastSSEEvent('new_order', latest);
+
+              // Si el bot de WhatsApp está enlazado y listo, enviar notificación por chat de WhatsApp al número del negocio
+              if (isReady && client) {
+                const ownerText = `🔔 *¡NUEVO PEDIDO RECIBIDO DESDE LA WEB!* 🌐\n\n` +
+                  `🆔 *Pedido:* ${latest.id}\n` +
+                  `👤 *Cliente:* ${latest.clientName || 'Cliente Web'}\n` +
+                  `📱 *Teléfono:* ${latest.phone || 'No especificado'}\n` +
+                  `🏠 *Dirección:* ${latest.address || 'Para recoger / Domicilio'}\n` +
+                  `${latest.notes ? `📝 *Notas:* ${latest.notes}\n` : ''}` +
+                  `💰 *TOTAL A PAGAR:* ${(latest.total || 0).toFixed(2)}€ (${latest.paymentMethod || 'Efectivo'})\n\n` +
+                  `✅ *REGISTRADO EN TIEMPO REAL EN EL PANEL ADMIN.* 🚀`;
+                
+                try {
+                  client.sendMessage('34603959537@c.us', ownerText).catch(() => {});
+                } catch(errWpp) {}
+              }
+            }
+          }
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, ordersCount: payload.orders ? payload.orders.length : 0 }));
         } catch(e) {
