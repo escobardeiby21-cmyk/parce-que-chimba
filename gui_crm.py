@@ -40,6 +40,7 @@ class ParceQueChimbaCRM:
         self.is_initial_load = True
         self.is_business_open = True
         self.is_chatbot_enabled = False
+        self.last_selected_order_id = None
 
         # Inventario por defecto
         self.inventory = [
@@ -168,6 +169,18 @@ class ParceQueChimbaCRM:
         self.tree_orders.column("status", width=110, anchor="center")
 
         self.tree_orders.pack(fill="both", expand=True, pady=6)
+
+        # Capturar clic y doble clic en cualquier pedido para que NUNCA se pierda la selección
+        def on_order_click(event):
+            sel = self.tree_orders.selection()
+            if sel:
+                try:
+                    self.last_selected_order_id = str(self.tree_orders.item(sel[0])["values"][0])
+                except Exception:
+                    pass
+
+        self.tree_orders.bind("<ButtonRelease-1>", on_order_click)
+        self.tree_orders.bind("<Double-1>", lambda e: self.assign_driver_to_order_dialog())
 
         # Botones de Acción de Pedidos
         action_bar = tk.Frame(self.tab_orders, bg="#121212")
@@ -370,15 +383,28 @@ class ParceQueChimbaCRM:
         self.render_accounting()
 
     def render_orders(self):
+        # Recordar cuál estaba seleccionado antes de refrescar para que no se borre el resaltado
+        sel = self.tree_orders.selection()
+        current_sel_id = None
+        if sel:
+            try:
+                current_sel_id = str(self.tree_orders.item(sel[0])["values"][0])
+            except Exception:
+                pass
+        if not current_sel_id:
+            current_sel_id = self.last_selected_order_id
+
         for item in self.tree_orders.get_children():
             self.tree_orders.delete(item)
 
         self.lbl_orders_count.config(text=f"Pedidos Totales: {len(self.orders)}")
 
+        target_node = None
         for o in self.orders:
+            oid = str(o.get("id", ""))
             driver_display = o.get("assignedDriver") or "❌ Sin Asignar"
-            self.tree_orders.insert("", "end", values=(
-                o.get("id", ""),
+            node = self.tree_orders.insert("", "end", values=(
+                oid,
                 o.get("timeStr", ""),
                 o.get("clientName", "Cliente"),
                 o.get("phone", ""),
@@ -388,6 +414,16 @@ class ParceQueChimbaCRM:
                 driver_display,
                 o.get("status", "En Cocina")
             ))
+            if current_sel_id and oid == current_sel_id:
+                target_node = node
+
+        # Restablecer la selección visualmente
+        if target_node:
+            try:
+                self.tree_orders.selection_set(target_node)
+                self.tree_orders.focus(target_node)
+            except Exception:
+                pass
 
     def render_crm(self):
         for item in self.tree_crm.get_children():
@@ -447,28 +483,36 @@ class ParceQueChimbaCRM:
         self.lbl_acc_cash.config(text=f"{total_cash:.2f} €")
         self.lbl_acc_bizum.config(text=f"{total_bizum:.2f} €")
 
+    def get_selected_order(self):
+        sel = self.tree_orders.selection()
+        order_id = None
+        if sel:
+            try:
+                order_id = str(self.tree_orders.item(sel[0])["values"][0])
+            except Exception:
+                pass
+        if not order_id and self.last_selected_order_id:
+            order_id = self.last_selected_order_id
+
+        if not order_id:
+            return None
+        return next((o for o in self.orders if str(o.get("id")) == order_id), None)
+
     def mark_selected_delivered(self):
-        selected = self.tree_orders.selection()
-        if not selected:
-            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
-        
-        item_vals = self.tree_orders.item(selected[0])["values"]
-        order_id = str(item_vals[0])
+        order = self.get_selected_order()
+        if not order:
+            return messagebox.showwarning("Selección", "Por favor haz clic sobre un pedido en la lista para seleccionarlo.")
 
-        for o in self.orders:
-            if str(o.get("id")) == order_id:
-                o["status"] = "Entregado"
-                break
-
+        order["status"] = "Entregado"
         self.render_orders()
-        messagebox.showinfo("Éxito", f"Pedido {order_id} marcado como ENTREGADO.")
+        messagebox.showinfo("Éxito", f"Pedido {order.get('id')} marcado como ENTREGADO.")
 
     def open_selected_whatsapp(self):
-        selected = self.tree_orders.selection()
-        if not selected:
-            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
-        
-        phone = str(self.tree_orders.item(selected[0])["values"][3]).replace("+", "").replace(" ", "")
+        order = self.get_selected_order()
+        if not order:
+            return messagebox.showwarning("Selección", "Por favor haz clic sobre un pedido en la lista para seleccionarlo.")
+
+        phone = str(order.get("phone", "")).replace("+", "").replace(" ", "")
         if phone:
             webbrowser.open(f"https://wa.me/{phone if phone.startswith('34') else '34' + phone}")
 
@@ -938,15 +982,11 @@ class ParceQueChimbaCRM:
         tk.Button(top, text="🚀 Registrar Pedido", bg="#f59e0b", fg="black", font=("Segoe UI", 11, "bold"), command=save_manual).pack(pady=16)
 
     def assign_driver_to_order_dialog(self):
-        selected = self.tree_orders.selection()
-        if not selected:
-            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
-
-        vals = self.tree_orders.item(selected[0])["values"]
-        order_id = str(vals[0])
-        order = next((o for o in self.orders if str(o.get("id")) == order_id), None)
+        order = self.get_selected_order()
         if not order:
-            return
+            return messagebox.showwarning("Selección", "Por favor haz clic sobre un pedido en la tabla para seleccionarlo.")
+
+        order_id = str(order.get("id"))
 
         top = tk.Toplevel(self.root)
         top.title(f"Asignar Repartidor a Pedido {order_id}")
@@ -992,15 +1032,11 @@ class ParceQueChimbaCRM:
         tk.Button(top, text="💬 Confirmar y Enviar por WhatsApp", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), command=save_assignment).pack(pady=16)
 
     def send_driver_whatsapp_notification(self):
-        selected = self.tree_orders.selection()
-        if not selected:
-            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista.")
-
-        vals = self.tree_orders.item(selected[0])["values"]
-        order_id = str(vals[0])
-        order = next((o for o in self.orders if str(o.get("id")) == order_id), None)
+        order = self.get_selected_order()
         if not order:
-            return
+            return messagebox.showwarning("Selección", "Por favor haz clic sobre un pedido en la tabla para seleccionarlo.")
+
+        order_id = str(order.get("id"))
 
         drv_name = order.get("assignedDriver")
         if not drv_name:
