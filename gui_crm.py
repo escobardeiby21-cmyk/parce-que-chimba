@@ -224,17 +224,14 @@ class ParceQueChimbaCRM:
         action_bar = tk.Frame(self.tab_inventory, bg="#121212")
         action_bar.pack(fill="x", pady=6)
 
-        btn_new = tk.Button(action_bar, text="➕ Agregar Insumo Nuevo", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.add_new_inventory_dialog)
-        btn_new.pack(side="left", padx=4)
+        btn_custom = tk.Button(action_bar, text="➕ Sumar Cantidad (+X)", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.add_custom_stock_dialog)
+        btn_custom.pack(side="left", padx=4)
 
         btn_edit = tk.Button(action_bar, text="✏️ Cambiar Cantidad / Costo (€)", bg="#3b82f6", fg="white", font=("Segoe UI", 10, "bold"), command=self.edit_selected_inventory)
         btn_edit.pack(side="left", padx=4)
 
-        btn_add = tk.Button(action_bar, text="➕ +5", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(5))
-        btn_add.pack(side="left", padx=2)
-
-        btn_sub = tk.Button(action_bar, text="➖ -1", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_stock(-1))
-        btn_sub.pack(side="left", padx=2)
+        btn_new = tk.Button(action_bar, text="➕ Insumo Nuevo", bg="#8b5cf6", fg="white", font=("Segoe UI", 10, "bold"), command=self.add_new_inventory_dialog)
+        btn_new.pack(side="left", padx=4)
 
         btn_reset = tk.Button(action_bar, text="🔄 Resetear TODO a 0", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.reset_all_stock_to_zero)
         btn_reset.pack(side="left", padx=4)
@@ -461,6 +458,49 @@ class ParceQueChimbaCRM:
         name = str(vals[1])
         msg = urllib.parse.quote(f"¡Hola {name}! 🤠🔥 En Que Chimba Parce premiamos tu fidelidad. ¡Te regalamos la bebida en tu próximo pedido!")
         webbrowser.open(f"https://wa.me/{phone if phone.startswith('34') else '34' + phone}?text={msg}")
+
+    def add_custom_stock_dialog(self):
+        selected = self.tree_inv.selection()
+        if not selected:
+            return messagebox.showwarning("Selección", "Por favor selecciona un insumo de la lista para sumar stock.")
+
+        vals = self.tree_inv.item(selected[0])["values"]
+        item_id = str(vals[0])
+        item_name = str(vals[1])
+        item = next((i for i in self.inventory if i["id"] == item_id), None)
+        if not item:
+            return
+
+        top = tk.Toplevel(self.root)
+        top.title(f"Sumar Stock: {item_name}")
+        top.geometry("360x220")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text=f"📦 Sumar Unidades a:\n{item_name}", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 11, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=5)
+        tk.Label(f1, text="Cantidad a Sumar:", bg="#1e1e1e", fg="white", font=("Segoe UI", 10)).pack(side="left")
+        e_qty = tk.Entry(f1, font=("Segoe UI", 11), width=10, justify="center")
+        e_qty.insert(0, "10")
+        e_qty.pack(side="left", padx=8)
+
+        def save_added():
+            try:
+                val = int(e_qty.get())
+                if val <= 0:
+                    return messagebox.showerror("Error", "Ingresa una cantidad mayor a 0.")
+                item["stock"] += val
+                self.render_inventory()
+                self.save_local_storage()
+                top.destroy()
+                messagebox.showinfo("Éxito", f"¡Se sumaron +{val} {item.get('unit','unidades')} a '{item_name}'!\nNuevo Stock: {item['stock']}")
+            except ValueError:
+                messagebox.showerror("Error", "Por favor ingresa un número entero válido.")
+
+        tk.Button(top, text="➕ Sumar al Stock", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=save_added).pack(pady=16)
 
     def adjust_stock(self, delta):
         selected = self.tree_inv.selection()
