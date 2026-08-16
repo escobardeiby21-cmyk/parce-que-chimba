@@ -21,6 +21,12 @@ try:
 except ImportError:
     winsound = None
 
+try:
+    from PIL import Image, ImageTk
+except ImportError:
+    Image = None
+    ImageTk = None
+
 # Configuración Global y Endpoints
 CLOUD_URL = "https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8"
 LOCAL_URL = "http://localhost:3333/api/orders"
@@ -95,8 +101,25 @@ class ParceQueChimbaCRM:
         header_frame = tk.Frame(self.root, bg="#1a1a1a", height=60)
         header_frame.pack(fill="x", side="top")
 
-        lbl_title = tk.Label(header_frame, text="🇨🇴 QUE CHIMBA PARCE — SUITE EMPRESARIAL CRM & ERPS", bg="#1a1a1a", fg="#f59e0b", font=("Segoe UI", 14, "bold"))
-        lbl_title.pack(side="left", padx=20, pady=12)
+        # Cargar y colocar Logo Oficial del proyecto
+        logo_path = os.path.join("public", "logo.png")
+        if not os.path.exists(logo_path):
+            logo_path = os.path.join("public", "logo.jpg")
+
+        if os.path.exists(logo_path) and Image and ImageTk:
+            try:
+                img = Image.open(logo_path).resize((44, 44), Image.Resampling.LANCZOS)
+                self.logo_img = ImageTk.PhotoImage(img)
+                lbl_logo = tk.Label(header_frame, image=self.logo_img, bg="#1a1a1a")
+                lbl_logo.pack(side="left", padx=(16, 4), pady=6)
+
+                # Icono de la ventana
+                self.root.iconphoto(True, self.logo_img)
+            except Exception:
+                pass
+
+        lbl_title = tk.Label(header_frame, text="QUE CHIMBA PARCE — SUITE EMPRESARIAL CRM & ERPS", bg="#1a1a1a", fg="#f59e0b", font=("Segoe UI", 14, "bold"))
+        lbl_title.pack(side="left", padx=10, pady=12)
 
         self.lbl_status = tk.Label(header_frame, text="🟢 CONECTADO A LA NUBE EN TIEMPO REAL", bg="#1a1a1a", fg="#10b981", font=("Segoe UI", 10, "bold"))
         self.lbl_status.pack(side="right", padx=20)
@@ -197,6 +220,9 @@ class ParceQueChimbaCRM:
 
         btn_wpp = tk.Button(action_bar, text="💬 WhatsApp Cliente", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=self.open_selected_whatsapp)
         btn_wpp.pack(side="left", padx=4)
+
+        btn_del_order = tk.Button(action_bar, text="🗑️ Eliminar Pedido", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=self.delete_selected_order)
+        btn_del_order.pack(side="left", padx=4)
 
     # --- TAB 2: CRM CLIENTES ---
     def build_tab_crm(self):
@@ -302,9 +328,15 @@ class ParceQueChimbaCRM:
         self.lbl_acc_bizum = tk.Label(c3, text="0.00 €", bg="#1e1e1e", fg="#3b82f6", font=("Segoe UI", 18, "bold"))
         self.lbl_acc_bizum.pack()
 
-        # Botón Exportar CSV
-        btn_export = tk.Button(self.tab_accounting, text="📥 Exportar Libro Contable a Excel (CSV)", bg="#10b981", fg="white", font=("Segoe UI", 11, "bold"), pady=10, command=self.export_csv)
-        btn_export.pack(pady=20)
+        # Botones de Acción de Contabilidad
+        acc_bar = tk.Frame(self.tab_accounting, bg="#121212")
+        acc_bar.pack(pady=20)
+
+        btn_export = tk.Button(acc_bar, text="📥 Exportar Libro Contable a Excel (CSV)", bg="#10b981", fg="white", font=("Segoe UI", 11, "bold"), pady=8, padx=12, command=self.export_csv)
+        btn_export.pack(side="left", padx=8)
+
+        btn_reset_acc = tk.Button(acc_bar, text="🧹 Resetear TODA la Contabilidad (Borrar Todo)", bg="#ef4444", fg="white", font=("Segoe UI", 11, "bold"), pady=8, padx=12, command=self.clear_all_accounting_history)
+        btn_reset_acc.pack(side="left", padx=8)
 
     # --- LÓGICA DE DATOS Y SINCRONIZACIÓN EN TIEMPO REAL ---
     def sync_loop(self):
@@ -515,6 +547,44 @@ class ParceQueChimbaCRM:
         phone = str(order.get("phone", "")).replace("+", "").replace(" ", "")
         if phone:
             webbrowser.open(f"https://wa.me/{phone if phone.startswith('34') else '34' + phone}")
+
+    def delete_selected_order(self):
+        order = self.get_selected_order()
+        if not order:
+            return messagebox.showwarning("Selección", "Por favor selecciona un pedido de la lista para eliminar.")
+
+        order_id = str(order.get("id"))
+        if messagebox.askyesno("Eliminar Pedido", f"¿Deseas eliminar el pedido '{order_id}' de la lista y contabilidad?"):
+            self.orders = [o for o in self.orders if str(o.get("id")) != order_id]
+            self.last_selected_order_id = None
+            self.render_all()
+
+            def push_bg():
+                try:
+                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}).encode('utf-8')
+                    req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
+                    urllib.request.urlopen(req, timeout=4)
+                except Exception:
+                    pass
+            threading.Thread(target=push_bg, daemon=True).start()
+            messagebox.showinfo("Eliminado", f"Pedido {order_id} eliminado de la contabilidad.")
+
+    def clear_all_accounting_history(self):
+        if messagebox.askyesno("Confirmar Limpieza Total", "⚠️ ¿Seguro que deseas BORRAR TODOS los pedidos de prueba de la contabilidad?\n\nEsto dejará las ventas, caja y contabilidad en 0.00€ para iniciar el negocio en limpio."):
+            self.orders = []
+            self.known_order_ids.clear()
+            self.last_selected_order_id = None
+            self.render_all()
+
+            def push_bg():
+                try:
+                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": []}}).encode('utf-8')
+                    req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
+                    urllib.request.urlopen(req, timeout=4)
+                except Exception:
+                    pass
+            threading.Thread(target=push_bg, daemon=True).start()
+            messagebox.showinfo("Contabilidad Reseteada", "¡Historial de contabilidad y pedidos reseteado a 0.00€ con éxito!")
 
     def send_promo_whatsapp(self):
         selected = self.tree_crm.selection()
