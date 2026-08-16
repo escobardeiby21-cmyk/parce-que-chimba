@@ -975,7 +975,25 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     // Guardar el pedido en la Nube y LocalStorage en tiempo real de forma inmediata
     saveOrdersToCloudAndLocal(updatedHistory, isBusinessOpen, true);
 
-    // Limpiar carrito e ingresar pedido a la vista flotante del cliente sin obligar a abrir la App de WhatsApp
+    // Abrir automáticamente WhatsApp en una pestaña con el boleto listo para enviar
+    const waText = `*¡Hola! Quiero confirmar mi pedido en Que Chimba Parce*\n\n` +
+      `*Mis Datos:*\n` +
+      `👤 Nombre: ${newOrder.clientName}\n` +
+      `🏠 Dirección: ${newOrder.address}\n` +
+      `📱 Teléfono: ${newOrder.phone}\n` +
+      `💳 Método de Pago: ${newOrder.paymentMethod}\n` +
+      `${newOrder.notes ? `📝 Notas: ${newOrder.notes}\n` : ''}\n` +
+      `*Mi Pedido (${newOrder.id}):*\n` +
+      newOrder.items.map(i => `• ${i.quantity || 1}x ${i.name} (${((i.price || 0) * (i.quantity || 1)).toFixed(2)}€)`).join('\n') +
+      `\n\n*Subtotal:* ${newOrder.subtotal.toFixed(2)}€\n` +
+      `*🛵 Domicilio:* ${newOrder.deliveryFee.toFixed(2)}€\n` +
+      `*Total a pagar: ${newOrder.total.toFixed(2)}€*`;
+
+    try {
+      window.open(`https://wa.me/34603959537?text=${encodeURIComponent(waText)}`, '_blank');
+    } catch(e) {}
+
+    // Limpiar carrito e ingresar pedido a la vista flotante del cliente
     setCart([]);
     setIsCartOpen(false);
     setSubmittedOrderModal(newOrder);
@@ -3234,16 +3252,16 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                 </div>
               </div>
 
-              <div className="bg-emerald-950/80 border border-emerald-700/80 p-3.5 rounded-2xl text-emerald-300 text-xs font-semibold space-y-1">
-                <p className="font-bold flex items-center justify-center gap-1">
-                  <span>✅</span> <span>¡TU PEDIDO YA FUE ENVIADO AL RESTAURANTE!</span>
+              <div className="bg-amber-950/90 border-2 border-amber-500 p-4 rounded-2xl text-amber-200 text-xs font-semibold space-y-2 text-left shadow-lg">
+                <p className="font-black text-amber-400 text-sm flex items-center gap-1.5 uppercase">
+                  <span>⚠️</span> PASO OBLIGATORIO PARA CONFIRMAR:
                 </p>
-                <p className="text-[11px] text-emerald-400/90">
-                  Ya está registrado en la cocina y sonando en el sistema. Tiempo estimado: 25 a 35 min. Te llamaremos al <strong>{submittedOrderModal.phone}</strong>.
+                <p className="text-[12px] leading-relaxed text-amber-100 font-medium">
+                  Para que la cocina reciba y prepare tu pedido, <strong>DEBES presionar el botón verde de abajo para enviar tu boleto por WhatsApp</strong>. ¡Sin este mensaje en WhatsApp el pedido no se prepara!
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 pt-1">
+              <div className="flex flex-col gap-2.5 pt-1">
                 <a
                   href={`https://wa.me/34603959537?text=${encodeURIComponent(
                     `*¡Hola! Quiero hacer un pedido en Parce Que Chimba*\n\n` +
@@ -3261,10 +3279,10 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-transform active:scale-95 border border-emerald-400/40"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black py-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.5)] cursor-pointer transition-transform active:scale-95 border-2 border-emerald-300 animate-pulse text-center"
                 >
                   <span>💬</span>
-                  <span>Enviar Confirmación a WhatsApp (+34 603 95 95 37)</span>
+                  <span>📲 PASO OBLIGATORIO: TOCA AQUÍ PARA ENVIAR POR WHATSAPP</span>
                 </a>
 
                 <button
