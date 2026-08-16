@@ -121,8 +121,11 @@ class ParceQueChimbaCRM:
         lbl_title = tk.Label(header_frame, text="QUE CHIMBA PARCE — SUITE EMPRESARIAL CRM & ERPS", bg="#1a1a1a", fg="#f59e0b", font=("Segoe UI", 14, "bold"))
         lbl_title.pack(side="left", padx=10, pady=12)
 
+        btn_sound_test = tk.Button(header_frame, text="🔔 Probar Audio", bg="#374151", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", command=self.test_audio_chime)
+        btn_sound_test.pack(side="right", padx=10)
+
         self.lbl_status = tk.Label(header_frame, text="🟢 CONECTADO A LA NUBE EN TIEMPO REAL", bg="#1a1a1a", fg="#10b981", font=("Segoe UI", 10, "bold"))
-        self.lbl_status.pack(side="right", padx=20)
+        self.lbl_status.pack(side="right", padx=10)
 
         # Contenedor de Pestañas
         self.notebook = ttk.Notebook(self.root)
@@ -203,23 +206,23 @@ class ParceQueChimbaCRM:
                     pass
 
         self.tree_orders.bind("<ButtonRelease-1>", on_order_click)
-        self.tree_orders.bind("<Double-1>", lambda e: self.assign_driver_to_order_dialog())
+        self.tree_orders.bind("<Double-1>", lambda e: self.confirm_and_notify_both_dialog())
 
         # Botones de Acción de Pedidos
         action_bar = tk.Frame(self.tab_orders, bg="#121212")
         action_bar.pack(fill="x", pady=6)
 
-        btn_assign = tk.Button(action_bar, text="🛵 Confirmar y Asignar Repartidor", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.assign_driver_to_order_dialog)
-        btn_assign.pack(side="left", padx=4)
-
-        btn_notify_drv = tk.Button(action_bar, text="💬 Notificar Repartidor WhatsApp", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), command=self.send_driver_whatsapp_notification)
-        btn_notify_drv.pack(side="left", padx=4)
+        btn_both = tk.Button(action_bar, text="🚀 Confirmar y Notificar (Cliente + Repartidor)", bg="#f59e0b", fg="black", font=("Segoe UI", 10, "bold"), command=self.confirm_and_notify_both_dialog)
+        btn_both.pack(side="left", padx=4)
 
         btn_deliver = tk.Button(action_bar, text="✅ Marcar ENTREGADO", bg="#10b981", fg="white", font=("Segoe UI", 10, "bold"), command=self.mark_selected_delivered)
         btn_deliver.pack(side="left", padx=4)
 
         btn_wpp = tk.Button(action_bar, text="💬 WhatsApp Cliente", bg="#374151", fg="white", font=("Segoe UI", 10, "bold"), command=self.open_selected_whatsapp)
         btn_wpp.pack(side="left", padx=4)
+
+        btn_notify_drv = tk.Button(action_bar, text="🛵 WhatsApp Repartidor", bg="#25D366", fg="white", font=("Segoe UI", 10, "bold"), command=self.send_driver_whatsapp_notification)
+        btn_notify_drv.pack(side="left", padx=4)
 
         btn_del_order = tk.Button(action_bar, text="🗑️ Eliminar Pedido", bg="#ef4444", fg="white", font=("Segoe UI", 10, "bold"), command=self.delete_selected_order)
         btn_del_order.pack(side="left", padx=4)
@@ -387,6 +390,20 @@ class ParceQueChimbaCRM:
         threading.Thread(target=self.fetch_orders, daemon=True).start()
         messagebox.showinfo("Sincronización", "¡Sincronización ejecutada con éxito desde la Nube!")
 
+    def test_audio_chime(self):
+        try:
+            self.root.bell()
+            if winsound:
+                try:
+                    winsound.MessageBeep(winsound.MB_ICONASTERISK)
+                    winsound.Beep(1200, 250)
+                    winsound.Beep(1600, 350)
+                except Exception:
+                    pass
+            messagebox.showinfo("Prueba de Sonido", "🔊 ¡Prueba de timbre ejecutada!\nSi escuchaste los pitidos/campana, el audio de notificaciones está 100% activo.")
+        except Exception as e:
+            messagebox.showerror("Error de Audio", f"No se pudo reproducir el sonido: {e}")
+
     def process_incoming_orders(self, new_orders):
         has_new = False
         for o in new_orders:
@@ -398,11 +415,15 @@ class ParceQueChimbaCRM:
         self.orders = new_orders
         self.save_local_storage()
 
-        # Reproducir sonido de timbre si hay un pedido nuevo
-        if has_new and not self.is_initial_load and winsound:
+        # Reproducir timbre si entra un pedido nuevo
+        if has_new and not self.is_initial_load:
             try:
-                winsound.Beep(880, 250)
-                winsound.Beep(1320, 350)
+                self.root.bell()
+                if winsound:
+                    winsound.MessageBeep(winsound.MB_ICONASTERISK)
+                    winsound.Beep(900, 200)
+                    winsound.Beep(1400, 300)
+                    winsound.Beep(1900, 400)
             except Exception:
                 pass
 
@@ -1050,6 +1071,83 @@ class ParceQueChimbaCRM:
                     self.send_driver_whatsapp(new_order, drv_obj)
 
         tk.Button(top, text="🚀 Registrar Pedido", bg="#f59e0b", fg="black", font=("Segoe UI", 11, "bold"), command=save_manual).pack(pady=16)
+
+    def confirm_and_notify_both_dialog(self):
+        order = self.get_selected_order()
+        if not order:
+            return messagebox.showwarning("Selección", "Por favor haz clic sobre un pedido en la lista para seleccionarlo.")
+
+        order_id = str(order.get("id"))
+        client_name = order.get("clientName", "Cliente")
+        client_phone = str(order.get("phone", "")).replace("+", "").replace(" ", "")
+
+        top = tk.Toplevel(self.root)
+        top.title(f"Confirmar Pedido {order_id} y Despachar")
+        top.geometry("440x320")
+        top.configure(bg="#1e1e1e")
+        top.transient(self.root)
+        top.grab_set()
+
+        tk.Label(top, text=f"🚀 Despacho y Notificaciones de Pedido {order_id}", bg="#1e1e1e", fg="#f59e0b", font=("Segoe UI", 11, "bold")).pack(pady=12)
+
+        f1 = tk.Frame(top, bg="#1e1e1e")
+        f1.pack(pady=6)
+        tk.Label(f1, text="Asignar Repartidor:", bg="#1e1e1e", fg="white", width=18, anchor="e").pack(side="left")
+        drv_names = [d["name"] for d in self.drivers]
+        cb_drv = ttk.Combobox(f1, values=drv_names, width=20, state="readonly")
+        if drv_names:
+            cb_drv.set(drv_names[0])
+        cb_drv.pack(side="left", padx=5)
+
+        var_notify_client = tk.BooleanVar(value=True)
+        var_notify_driver = tk.BooleanVar(value=True)
+
+        chk1 = tk.Checkbutton(top, text=f"💬 Notificar Confirmación a Cliente ({client_name})", variable=var_notify_client, bg="#1e1e1e", fg="#10b981", selectcolor="#2a2a2a", font=("Segoe UI", 9, "bold"))
+        chk1.pack(anchor="w", padx=30, pady=4)
+
+        chk2 = tk.Checkbutton(top, text="🛵 Enviar Ficha de Domicilio al Repartidor por WhatsApp", variable=var_notify_driver, bg="#1e1e1e", fg="#3b82f6", selectcolor="#2a2a2a", font=("Segoe UI", 9, "bold"))
+        chk2.pack(anchor="w", padx=30, pady=4)
+
+        def execute_dispatch():
+            drv_sel = cb_drv.get()
+            if not drv_sel:
+                return messagebox.showerror("Error", "Selecciona un repartidor.")
+
+            order["assignedDriver"] = drv_sel
+            order["status"] = "En Camino"
+            self.render_orders()
+
+            def push_bg():
+                try:
+                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}).encode('utf-8')
+                    req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
+                    urllib.request.urlopen(req, timeout=4)
+                except Exception:
+                    pass
+            threading.Thread(target=push_bg, daemon=True).start()
+
+            top.destroy()
+
+            if var_notify_client.get() and client_phone:
+                clean_cphone = client_phone if client_phone.startswith("34") else "34" + client_phone
+                cmsg = (
+                    f"¡Hola {client_name}! 🤠🔥\n\n"
+                    f"Tu pedido *{order_id}* en *Que Chimba Parce* ha sido *CONFIRMADO* y está en camino con nuestro repartidor *{drv_sel}*. 🛵🍔\n\n"
+                    f"💰 *Total a pagar:* {order.get('total', 0):.2f}€ ({order.get('paymentMethod', 'Efectivo')})\n"
+                    f"🏠 *Dirección:* {order.get('address', '')}\n\n"
+                    f"¡Gracias por preferir el auténtico sabor colombiano! 🇨🇴"
+                )
+                webbrowser.open(f"https://wa.me/{clean_cphone}?text={urllib.parse.quote(cmsg)}")
+
+            if var_notify_driver.get():
+                drv_obj = next((d for d in self.drivers if d["name"] == drv_sel), None)
+                if drv_obj:
+                    if var_notify_client.get() and client_phone:
+                        self.root.after(1200, lambda: self.send_driver_whatsapp(order, drv_obj))
+                    else:
+                        self.send_driver_whatsapp(order, drv_obj)
+
+        tk.Button(top, text="🚀 CONFIRMAR Y DESPACHAR AHORA", bg="#f59e0b", fg="black", font=("Segoe UI", 11, "bold"), command=execute_dispatch).pack(pady=16)
 
     def assign_driver_to_order_dialog(self):
         order = self.get_selected_order()
