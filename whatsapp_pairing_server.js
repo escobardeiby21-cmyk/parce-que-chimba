@@ -722,13 +722,75 @@ Escriba la categoría que desea pedir hoy:
 Para atenderle con el mayor gusto, escriba **Hamburguesas**, **Perros**, **Salchipapas**, **Picadas** o **Alitas** y seleccione su plato respondiendo con un número (1, 2, 3...) 🍔🌭🍟🥩🍗`;
 }
 
+function parseIncomingWhatsAppReceipt(msgText, senderId, notifyName) {
+  if (!msgText) return null;
+  const t = msgText;
+
+  // Si contiene el patrón de pedido o ticket enviado por el cliente
+  if (t.includes('#PQ-') || t.includes('Mi Pedido') || (t.includes('Nombre:') && t.includes('Dirección:'))) {
+    const idMatch = t.match(/#PQ-\d+/i);
+    const now = new Date();
+    const orderId = idMatch ? idMatch[0].toUpperCase() : ('#PQ-' + Math.floor(100000 + Math.random() * 900000));
+
+    const nameMatch = t.match(/Nombre:\s*([^\n\r]+)/i);
+    const clientName = nameMatch ? nameMatch[1].trim() : (notifyName || 'Cliente WhatsApp');
+
+    const phoneMatch = t.match(/Teléfono:\s*([^\n\r]+)/i);
+    let rawPhone = phoneMatch ? phoneMatch[1].trim() : senderId.replace('@c.us', '').replace('@lid', '');
+    if (!rawPhone.startsWith('34') && !rawPhone.startsWith('+34')) {
+      rawPhone = '34' + rawPhone;
+    }
+
+    const addrMatch = t.match(/Dirección:\s*([^\n\r]+)/i);
+    const address = addrMatch ? addrMatch[1].trim() : 'Dirección WhatsApp';
+
+    const payMatch = t.match(/Método de Pago:\s*([^\n\r]+)/i);
+    const paymentMethod = payMatch ? payMatch[1].trim() : (t.toLowerCase().includes('bizum') ? 'Bizum' : 'Efectivo');
+
+    const totalMatch = t.match(/Total a pagar:\s*([\d\.,]+)/i);
+    let totalVal = totalMatch ? parseFloat(totalMatch[1].replace(',', '.')) : 0.0;
+
+    const notesMatch = t.match(/Notas:\s*([^\n\r]+)/i);
+    const notes = notesMatch ? notesMatch[1].trim() : '';
+
+    return {
+      id: orderId,
+      source: 'WhatsApp Ticket 📱',
+      clientName: clientName,
+      phone: rawPhone,
+      address: address,
+      paymentMethod: paymentMethod,
+      items: [{ name: 'Pedido por WhatsApp', price: totalVal > 0 ? totalVal : 8.00, quantity: 1 }],
+      subtotal: totalVal > 2.00 ? totalVal - 2.00 : totalVal,
+      deliveryFee: 2.00,
+      total: totalVal > 0 ? totalVal : 8.00,
+      status: 'En Preparación',
+      assignedDriver: null,
+      notes: notes,
+      timeStr: now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: now.toISOString(),
+      dateStr: now.toLocaleDateString('es-ES'),
+      isoDateStr: now.toISOString().split('T')[0]
+    };
+  }
+  return null;
+}
+
 client.on('message', async (msg) => {
   try {
     if (msg.fromMe) return;
     if (msg.from.includes('status@broadcast')) return; // Ignorar historias
     if (msg.from.endsWith('@g.us')) return; // Ignorar chats grupales de WhatsApp
 
-    // Si el chatbot está DESACTIVADO por el administrador, no responder automáticamente para permitir atención manual
+    // A) SIEMPRE DETECTAR Y REGISTRAR CUALQUIER TICKET DE PEDIDO QUE ENTRE A WHATSAPP
+    const rawOrder = parseIncomingWhatsAppReceipt(msg.body, msg.from, msg._data?.notifyName);
+    if (rawOrder) {
+      console.log(`📥 ¡NUEVO PEDIDO DIRECTO RECIBIDO EN WHATSAPP!: ${rawOrder.id} - ${rawOrder.clientName}`);
+      pushOrderToCloud(rawOrder);
+      return;
+    }
+
+    // B) Si el chatbot está DESACTIVADO por el administrador, no responder automáticamente para permitir atención manual
     if (!isChatbotEnabled) {
       return;
     }
