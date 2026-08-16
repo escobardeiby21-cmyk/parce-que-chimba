@@ -43,6 +43,7 @@ class ParceQueChimbaCRM:
         # Estado Global
         self.orders = []
         self.known_order_ids = set()
+        self.deleted_order_ids = set()
         self.is_initial_load = True
         self.is_business_open = True
         self.is_chatbot_enabled = False
@@ -376,15 +377,16 @@ class ParceQueChimbaCRM:
         except Exception:
             pass
 
-        # Combinar todos los pedidos de WhatsApp y Web evitando duplicados por ID
+        # Combinar todos los pedidos de WhatsApp y Web evitando duplicados por ID y descartando los eliminados
         merged_map = {}
         for o in (cloud_orders + local_orders):
             if isinstance(o, dict) and o.get("id"):
-                merged_map[o["id"]] = o
+                oid = str(o["id"])
+                if oid not in self.deleted_order_ids:
+                    merged_map[oid] = o
 
         merged_list = list(merged_map.values())
-        if merged_list:
-            self.process_incoming_orders(merged_list)
+        self.process_incoming_orders(merged_list)
 
     def manual_sync(self):
         threading.Thread(target=self.fetch_orders, daemon=True).start()
@@ -576,34 +578,63 @@ class ParceQueChimbaCRM:
 
         order_id = str(order.get("id"))
         if messagebox.askyesno("Eliminar Pedido", f"¿Deseas eliminar el pedido '{order_id}' de la lista y contabilidad?"):
+            self.deleted_order_ids.add(order_id)
             self.orders = [o for o in self.orders if str(o.get("id")) != order_id]
             self.last_selected_order_id = None
             self.render_all()
+            self.save_local_storage()
 
             def push_bg():
+                payload_data = {"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}
+                payload_bytes = json.dumps(payload_data).encode('utf-8')
+                
+                # 1. Borrar en la Nube
                 try:
-                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": self.orders}}).encode('utf-8')
                     req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
                     urllib.request.urlopen(req, timeout=4)
                 except Exception:
                     pass
+
+                # 2. Borrar en el Servidor Bot Local
+                try:
+                    req_loc = urllib.request.Request(LOCAL_URL, data=json.dumps({"orders": self.orders}).encode('utf-8'), headers={"Content-Type": "application/json"}, method="POST")
+                    urllib.request.urlopen(req_loc, timeout=3)
+                except Exception:
+                    pass
+
             threading.Thread(target=push_bg, daemon=True).start()
-            messagebox.showinfo("Eliminado", f"Pedido {order_id} eliminado de la contabilidad.")
+            messagebox.showinfo("Eliminado", f"Pedido {order_id} eliminado permanentemente.")
 
     def clear_all_accounting_history(self):
         if messagebox.askyesno("Confirmar Limpieza Total", "⚠️ ¿Seguro que deseas BORRAR TODOS los pedidos de prueba de la contabilidad?\n\nEsto dejará las ventas, caja y contabilidad en 0.00€ para iniciar el negocio en limpio."):
+            for o in self.orders:
+                if o.get("id"):
+                    self.deleted_order_ids.add(str(o["id"]))
+
             self.orders = []
             self.known_order_ids.clear()
             self.last_selected_order_id = None
             self.render_all()
+            self.save_local_storage()
 
             def push_bg():
+                payload_data = {"name": "ParceQueChimbaOrders", "data": {"orders": []}}
+                payload_bytes = json.dumps(payload_data).encode('utf-8')
+
+                # 1. Borrar en la Nube
                 try:
-                    payload_bytes = json.dumps({"name": "ParceQueChimbaOrders", "data": {"orders": []}}).encode('utf-8')
                     req = urllib.request.Request(CLOUD_URL, data=payload_bytes, headers={"Content-Type": "application/json"}, method="PUT")
                     urllib.request.urlopen(req, timeout=4)
                 except Exception:
                     pass
+
+                # 2. Borrar en el Servidor Bot Local
+                try:
+                    req_loc = urllib.request.Request(LOCAL_URL, data=json.dumps({"orders": []}).encode('utf-8'), headers={"Content-Type": "application/json"}, method="POST")
+                    urllib.request.urlopen(req_loc, timeout=3)
+                except Exception:
+                    pass
+
             threading.Thread(target=push_bg, daemon=True).start()
             messagebox.showinfo("Contabilidad Reseteada", "¡Historial de contabilidad y pedidos reseteado a 0.00€ con éxito!")
 
@@ -1273,13 +1304,20 @@ class ParceQueChimbaCRM:
                         self.inventory = d["inventory"]
                     if "drivers" in d:
                         self.drivers = d["drivers"]
+                    if "deleted_ids" in d and isinstance(d["deleted_ids"], list):
+                        self.deleted_order_ids = set(d["deleted_ids"])
             except Exception:
                 pass
 
     def save_local_storage(self):
         try:
             with open(DATA_FILE, "w", encoding="utf-8") as f:
-                json.dump({"inventory": self.inventory, "drivers": self.drivers}, f, ensure_ascii=False, indent=2)
+                data_to_save = {
+                    "inventory": self.inventory,
+                    "drivers": self.drivers,
+                    "deleted_ids": list(self.deleted_order_ids)
+                }
+                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
 
