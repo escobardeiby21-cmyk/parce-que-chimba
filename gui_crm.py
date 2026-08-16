@@ -28,7 +28,7 @@ except ImportError:
     ImageTk = None
 
 # Configuración Global y Endpoints
-CLOUD_URL = "https://api.restful-api.dev/objects/ff8081819ff5b11001a00bc5b83a2ee8"
+CLOUD_URL = "https://www.parcequechimba.com/api/orders"
 LOCAL_URL = "http://localhost:3333/api/orders"
 DATA_FILE = "crm_local_db.json"
 
@@ -355,13 +355,15 @@ class ParceQueChimbaCRM:
         cloud_orders = []
         local_orders = []
 
-        # 1. Obtener Pedidos Globales de la Nube
+        # 1. Obtener Pedidos Globales de la Nube Oficial (parcequechimba.com)
         try:
             req = urllib.request.Request(CLOUD_URL, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=4) as response:
+            with urllib.request.urlopen(req, timeout=5) as response:
                 if response.status == 200:
-                    data = json.loads(response.read().decode())
-                    if isinstance(data.get("data", {}).get("orders"), list):
+                    data = json.loads(response.read().decode('utf-8'))
+                    if isinstance(data.get("orders"), list):
+                        cloud_orders = data["orders"]
+                    elif isinstance(data.get("data", {}).get("orders"), list):
                         cloud_orders = data["data"]["orders"]
         except Exception:
             pass
