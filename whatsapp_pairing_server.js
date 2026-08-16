@@ -101,7 +101,8 @@ const server = http.createServer(async (req, res) => {
                   `✅ *REGISTRADO EN TIEMPO REAL EN EL PANEL ADMIN.* 🚀`;
                 
                 try {
-                  client.sendMessage('34603959537@c.us', ownerText).catch(() => {});
+                  const targetJid = client.info?.wid?._serialized || '34603959537@c.us';
+                  client.sendMessage(targetJid, ownerText).catch(() => {});
                 } catch(errWpp) {}
               }
             }
