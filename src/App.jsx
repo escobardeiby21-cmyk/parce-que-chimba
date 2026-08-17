@@ -1291,7 +1291,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
             
             <div className="flex-1 text-left">
               <div className="flex items-center gap-1">
-                <span className="text-amber-400 font-black text-xs uppercase tracking-wide">¡Oíste Parce! 🤠📱</span>
+                <span className="text-amber-400 font-black text-xs uppercase tracking-wide">¡EPA PARCE! 🤠📱</span>
                 <span className="text-[9px] bg-amber-500 text-black font-black px-1.5 py-0.2 rounded-full uppercase">Android App</span>
               </div>
               <p className="text-[10px] text-gray-200 font-semibold leading-tight mt-0.5">
