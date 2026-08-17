@@ -743,7 +743,7 @@ function parseIncomingWhatsAppReceipt(msgText, senderId, notifyName) {
   if (t.includes('#PQ-') || t.includes('Mi Pedido') || (t.includes('Nombre:') && t.includes('Dirección:'))) {
     const idMatch = t.match(/#PQ-\d+/i);
     const now = new Date();
-    const orderId = idMatch ? idMatch[0].toUpperCase() : ('#PQ-' + Math.floor(100000 + Math.random() * 900000));
+    const orderId = idMatch ? idMatch[0].toUpperCase() : ('#PQ-' + Math.floor(100 + Math.random() * 900));
 
     const nameMatch = t.match(/Nombre:\s*([^\n\r]+)/i);
     const clientName = nameMatch ? nameMatch[1].trim() : (notifyName || 'Cliente WhatsApp');
@@ -816,7 +816,7 @@ client.on('message', async (msg) => {
       const clientName = msg._data?.notifyName || 'Cliente WhatsApp';
 
       let session = userSessions.get(msg.from) || { cart: [], total: 10.00 };
-      const orderId = 'WPP-' + Math.floor(1000 + Math.random() * 9000);
+      const orderId = '#PQ-W' + Math.floor(100 + Math.random() * 900);
       const now = new Date();
 
       const newOrder = {
@@ -957,7 +957,7 @@ client.on('message', async (msg) => {
 
     if (session && session.cart.length > 0 && (msg.type === 'location' || (session.lastMenu === 'confirming' && userText.length > 5))) {
       const now = new Date();
-      const orderId = 'WPP-' + Math.floor(1000 + Math.random() * 9000);
+      const orderId = '#PQ-W' + Math.floor(100 + Math.random() * 900);
       const clientName = session.clientName || senderNotifyName || 'Cliente WhatsApp';
 
       let formattedAddress = '';

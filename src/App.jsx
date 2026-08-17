@@ -945,7 +945,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     const now = new Date();
     const isoDateStr = now.toISOString().slice(0,10);
 
-    const uniqueCode = Date.now().toString().slice(-4) + Math.floor(10 + Math.random() * 90);
+    const uniqueCode = Math.floor(100 + Math.random() * 900);
     const orderId = `#PQ-${uniqueCode}`;
 
     const newOrder = {

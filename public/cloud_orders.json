@@ -1,6 +1,85 @@
 {
   "orders": [
     {
+      "id": "#PQ-420037",
+      "timestamp": "2026-08-17T02:04:24.200Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "04:04",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "kljlj",
+      "phone": "knlkj",
+      "address": "kljj",
+      "notes": "hhhj",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 6,
+      "deliveryFee": 2,
+      "total": 8
+    },
+    {
+      "id": "#PQ-010865",
+      "source": "WhatsApp Ticket 📱",
+      "clientName": "Jajsj",
+      "phone": "34646864",
+      "address": "Jajzj",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Pedido por WhatsApp",
+          "price": 42,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 40,
+      "deliveryFee": 2,
+      "total": 42,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "",
+      "timeStr": "04:00",
+      "timestamp": "2026-08-17T02:00:45.845Z",
+      "dateStr": "17/8/2026",
+      "isoDateStr": "2026-08-17"
+    },
+    {
+      "id": "#PQ-898877",
+      "source": "WhatsApp Ticket 📱",
+      "clientName": "Jdjsj",
+      "phone": "344648",
+      "address": "Jajxja",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Pedido por WhatsApp",
+          "price": 14,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 12,
+      "deliveryFee": 2,
+      "total": 14,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "",
+      "timeStr": "04:00",
+      "timestamp": "2026-08-17T02:00:45.662Z",
+      "dateStr": "17/8/2026",
+      "isoDateStr": "2026-08-17"
+    },
+    {
       "id": "#PQ-532626",
       "timestamp": "2026-08-17T00:15:55.326Z",
       "isoDateStr": "2026-08-17",
@@ -403,6 +482,301 @@
       "subtotal": 9,
       "deliveryFee": 2,
       "total": 11
+    },
+    {
+      "id": "#PQ-666090",
+      "timestamp": "2026-08-17T01:51:16.660Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "03:51",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Lalala",
+      "phone": "603959537",
+      "address": "Najajs",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 12,
+      "deliveryFee": 2,
+      "total": 14
+    },
+    {
+      "id": "#PQ-645427",
+      "timestamp": "2026-08-16T19:26:06.454Z",
+      "isoDateStr": "2026-08-16",
+      "dateStr": "16/8/2026",
+      "timeStr": "21:26",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Deiby escoba",
+      "phone": "63218466",
+      "address": "2, Calle Castejón, Las Peñas (📍 GPS: https://maps.google.com/?q=39.491796796000536,-1.0972524466047955)",
+      "notes": "Prueba 1",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 6,
+      "deliveryFee": 2,
+      "total": 8
+    },
+    {
+      "id": "#PQ-292320",
+      "timestamp": "2026-08-16T19:26:22.923Z",
+      "isoDateStr": "2026-08-16",
+      "dateStr": "16/8/2026",
+      "timeStr": "21:26",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Katerin ",
+      "phone": "603959537",
+      "address": "Calle",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 12,
+      "deliveryFee": 2,
+      "total": 14
+    },
+    {
+      "id": "#PQ-607611",
+      "timestamp": "2026-08-16T19:25:36.076Z",
+      "isoDateStr": "2026-08-16",
+      "dateStr": "16/8/2026",
+      "timeStr": "21:25",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Nmm",
+      "phone": "603959537",
+      "address": "Mmm",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "a2",
+          "name": "8 Alitas",
+          "description": "Deliciosas alitas bañadas en salsa BBQ (INCLUYE PATATAS).",
+          "price": 8,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 16,
+      "deliveryFee": 2,
+      "total": 18
+    },
+    {
+      "id": "#PQ-705868",
+      "timestamp": "2026-08-17T01:53:27.058Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "03:53",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Ydhhd",
+      "phone": "878545455",
+      "address": "Hxjdjhdj",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h4",
+          "name": "Combo de Hamburguesa",
+          "description": "Carne, bacon, queso, cebolla caramelizada, lechuga, tomate, ensalada (INCLUYE PATATAS Y BEBIDA).",
+          "price": 9,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 9,
+      "deliveryFee": 2,
+      "total": 11
+    },
+    {
+      "id": "#PQ-802038",
+      "timestamp": "2026-08-17T01:54:38.020Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "03:54",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Jsjsj",
+      "phone": "5758",
+      "address": "Bssbjs",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 1
+        },
+        {
+          "id": "h2",
+          "name": "Hamburguesa Doble",
+          "description": "Doble carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 8,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 14,
+      "deliveryFee": 2,
+      "total": 16
+    },
+    {
+      "id": "#PQ-681089",
+      "timestamp": "2026-08-17T01:56:46.810Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "03:56",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Mama",
+      "phone": "64686468",
+      "address": "Iskdk",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 12,
+      "deliveryFee": 2,
+      "total": 14
+    },
+    {
+      "id": "#PQ-745175",
+      "timestamp": "2026-08-16T17:00:37.451Z",
+      "isoDateStr": "2026-08-16",
+      "dateStr": "16/8/2026",
+      "timeStr": "19:00",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "Mateo",
+      "phone": "692384276",
+      "address": "Calle Castejon 1",
+      "notes": "",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h2",
+          "name": "Hamburguesa Doble",
+          "description": "Doble carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 8,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 8,
+      "deliveryFee": 2,
+      "total": 10
+    },
+    {
+      "id": "WPP-5523",
+      "source": "WhatsApp AI Bot 🤖",
+      "clientName": "Cristiano Ronaldo",
+      "phone": "+34 418400848",
+      "address": "🏠 Las peñas 5",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Hamburguesa Clásica",
+          "price": 6,
+          "desc": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa."
+        },
+        {
+          "name": "Postobón Colombiana",
+          "price": 2.5
+        }
+      ],
+      "subtotal": 8.5,
+      "deliveryFee": 2,
+      "total": 10.5,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "Sin cambios ni notas especiales",
+      "timestamp": "2026-08-13T18:45:51.735Z",
+      "dateStr": "13/8/2026",
+      "isoDateStr": "2026-08-13"
+    },
+    {
+      "id": "WPP-5524",
+      "source": "WhatsApp AI Bot 🤖",
+      "clientName": "Camila",
+      "phone": "+34 612345678",
+      "address": "📍 Calle Principal 12, 3ºB",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "name": "Hamburguesa Parce Especial",
+          "price": 8.5,
+          "desc": "Doble carne, queso cheddar, bacon crujiente, salsas especiales."
+        },
+        {
+          "name": "Empanadas de Carne (3 ud)",
+          "price": 4.5
+        }
+      ],
+      "subtotal": 13,
+      "deliveryFee": 2,
+      "total": 15,
+      "status": "En Preparación",
+      "assignedDriver": null,
+      "notes": "Pedido de Camila - Entregar caliente",
+      "timestamp": "2026-08-13T18:40:00.000Z",
+      "dateStr": "13/8/2026",
+      "isoDateStr": "2026-08-13"
     }
   ],
   "isOpen": true,
