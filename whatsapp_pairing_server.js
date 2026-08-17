@@ -313,30 +313,24 @@ function getSpainTimeData() {
 }
 
 function checkIsWithinBusinessHours() {
-  try {
-    const localPath = path.join(process.cwd(), 'public', 'cloud_orders.json');
-    if (fs.existsSync(localPath)) {
-      const raw = fs.readFileSync(localPath, 'utf8');
-      const parsed = JSON.parse(raw);
-      if (parsed.isOpen !== undefined && parsed.isOpen !== null) {
-        return parsed.isOpen;
-      }
-    }
-  } catch (e) {}
-
   const { day, hour } = getSpainTimeData();
 
-  if (day === 1) return false; // Lunes cerrado por descanso
+  // Lunes: CERRADO TODO EL DÍA POR DESCANSO (solo abierto de 00:00 a 03:00 AM si continúa el turno del domingo)
+  if (day === 1) {
+    return hour < 3;
+  }
 
+  // Martes a Jueves: 17:00 hs a 00:00 hs (5 PM - 12 AM)
   if ([2, 3, 4].includes(day)) {
-    return hour >= 17 && hour < 24; // Mar-Jue 5 PM a 12 AM
+    return hour >= 17 && hour < 24;
   }
 
+  // Viernes, Sábado y Domingo: 17:00 hs a 03:00 AM (5 PM - 3 AM)
   if ([5, 6, 0].includes(day)) {
-    return hour >= 17 || hour < 3; // Vie-Dom 5 PM a 3 AM
+    return hour >= 17 || hour < 3;
   }
 
-  return true;
+  return false;
 }
 
 // Almacenamiento de sesiones activas de clientes

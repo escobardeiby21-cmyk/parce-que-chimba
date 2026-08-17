@@ -218,20 +218,26 @@ function App() {
   // Función que calcula si el negocio está abierto según la Hora Oficial de España (Europe/Madrid)
   const checkIsWithinBusinessHours = () => {
     try {
-      const { day, hours, minutes } = getSpainTimeData();
-      const currentMins = hours * 60 + minutes;
+      const { day, hours } = getSpainTimeData();
 
-      // Si estamos en la noche/tarde de 17:00 hs (5 PM) a 03:00 AM (ejemplo: 9:25 PM / 21:25 hs) -> SIEMPRE ABIERTO 🟢
-      if (currentMins >= 17 * 60 || currentMins < 3 * 60) {
-        return true;
+      // Lunes: CERRADO TODO EL DÍA POR DESCANSO (solo abierto de 00:00 a 03:00 AM si continúa el turno del domingo)
+      if (day === 1) {
+        return hours < 3;
       }
 
-      // Lunes únicamente cerrado de 03:00 a 17:00 hs
-      if (day === 1) return false;
+      // Martes a Jueves: 17:00 hs a 00:00 hs (5 PM - 12 AM)
+      if ([2, 3, 4].includes(day)) {
+        return hours >= 17 && hours < 24;
+      }
 
-      return true;
+      // Viernes, Sábado y Domingo: 17:00 hs a 03:00 AM (5 PM - 3 AM)
+      if ([5, 6, 0].includes(day)) {
+        return hours >= 17 || hours < 3;
+      }
+
+      return false;
     } catch(e) {
-      return true;
+      return false;
     }
   };
 
@@ -240,13 +246,11 @@ function App() {
     return safeJsonParse('pq_chimba_manual_override', null);
   });
 
-  // Estado de Abrir / Cerrar Negocio (Por defecto ABIERTO 🟢)
+  // Estado de Abrir / Cerrar Negocio
   const [isBusinessOpen, setIsBusinessOpen] = useState(() => {
     const overrideVal = safeJsonParse('pq_chimba_manual_override', null);
     if (overrideVal !== null) return overrideVal;
-    const savedOpen = safeJsonParse('pq_chimba_is_open', null);
-    if (savedOpen !== null) return savedOpen;
-    return true;
+    return checkIsWithinBusinessHours();
   });
 
   const [showClosedModal, setShowClosedModal] = useState(false);
