@@ -769,17 +769,10 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
           // Preservar pedidos locales que no estén en remoto
           localOrders.forEach(o => { if (o && o.id && !mergedMap.has(o.id)) mergedMap.set(o.id, o); });
 
+          // Actualización de historial de pedidos
           const mergedList = Array.from(mergedMap.values());
           setOrdersHistory(mergedList);
           localStorage.setItem('pq_chimba_orders', JSON.stringify(mergedList));
-
-          if (typeof data.isOpen === 'boolean') {
-            const savedManual = localStorage.getItem('pq_chimba_manual_override');
-            if (savedManual === null) {
-              setIsBusinessOpen(data.isOpen);
-              localStorage.setItem('pq_chimba_is_open', JSON.stringify(data.isOpen));
-            }
-          }
         }
       }
     } catch (err) {}
@@ -819,6 +812,18 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
       } catch(e) {}
     }
 
+    const checkSchedule = () => {
+      const overrideVal = safeJsonParse('pq_chimba_manual_override', null);
+      if (overrideVal !== null) {
+        setIsBusinessOpen(overrideVal);
+      } else {
+        const calculated = checkIsWithinBusinessHours();
+        setIsBusinessOpen(calculated);
+      }
+    };
+    checkSchedule();
+    const scheduleInterval = setInterval(checkSchedule, 5000);
+
     fetchCloudOrders();
     const interval = setInterval(fetchCloudOrders, 2000);
 
@@ -851,6 +856,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
 
     return () => {
       clearInterval(interval);
+      clearInterval(scheduleInterval);
       try { if (esLocal) esLocal.close(); } catch(e){}
       try { if (esRemote) esRemote.close(); } catch(e){}
     };
