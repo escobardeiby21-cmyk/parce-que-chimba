@@ -6,6 +6,14 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
+process.on('uncaughtException', (err) => {
+  console.log('⚠️ Excepción capturada para prevenir caída:', err ? err.message : err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.log('⚠️ Promesa rechazada capturada:', reason ? (reason.message || reason) : reason);
+});
+
 const CLOUD_DB_URL = 'https://parcequechimba.com/api/orders';
 
 let openai = null;
