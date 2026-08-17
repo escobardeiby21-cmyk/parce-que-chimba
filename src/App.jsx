@@ -3234,12 +3234,12 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                 </div>
               </div>
 
-              <div className="bg-red-950/90 border-2 border-red-500 p-4 rounded-2xl text-red-100 text-xs font-semibold space-y-2 text-left shadow-[0_0_30px_rgba(239,68,68,0.3)]">
-                <p className="font-black text-red-400 text-sm flex items-center gap-1.5 uppercase tracking-wide">
-                  <span>🛑</span> TU PEDIDO AÚN NO HA SIDO RECIBIDO
+              <div className="bg-gradient-to-r from-red-950/95 to-amber-950/95 border-2 border-red-500 p-4 rounded-2xl text-red-100 text-xs font-semibold space-y-2 text-left shadow-[0_0_35px_rgba(239,68,68,0.4)]">
+                <p className="font-black text-amber-400 text-sm flex items-center gap-1.5 uppercase tracking-wide">
+                  <span>🤠</span> ¡OJO PUES PARCE! TU PEDIDO AÚN NO HA LLEGADO
                 </p>
-                <p className="text-[12px] leading-relaxed text-red-100 font-medium">
-                  Para que la dueña reciba tu boleto y la cocina empiece a preparar tu comida, <strong>DEBES presionar el botón verde de abajo para enviarlo a su WhatsApp (+34 603 95 95 37)</strong>. ¡Sin el mensaje de WhatsApp el restaurante NO se entera de tu pedido!
+                <p className="text-[12px] leading-relaxed text-amber-100 font-medium">
+                  ¡Ave María pues! Para que la doña reciba tu boleto y los muchachos en la cocina empiecen a fritar esa delicia, <strong>DEBES tocar el botón verde de abajo para enviar tu mensaje al WhatsApp (+34 603 95 95 37)</strong>. ¡Sin ese mensaje de WhatsApp el restaurante NO sabe qué cocinarte mijo! 🍔🌭
                 </p>
               </div>
 
@@ -3264,7 +3264,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
                   className="w-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black py-4 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(16,185,129,0.5)] cursor-pointer transition-transform active:scale-95 border-2 border-emerald-300 animate-pulse text-center"
                 >
                   <span>💬</span>
-                  <span>📲 PASO OBLIGATORIO: TOCA AQUÍ PARA ENVIAR POR WHATSAPP</span>
+                  <span className="text-sm font-black">📲 ¡OJO PUES! TOCA AQUÍ Y ENVÍA TU PEDIDO A WHATSAPP</span>
                 </a>
 
                 <button
