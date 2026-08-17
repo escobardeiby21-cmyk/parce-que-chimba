@@ -1,6 +1,35 @@
 {
   "orders": [
     {
+      "id": "#PQ-532626",
+      "timestamp": "2026-08-17T00:15:55.326Z",
+      "isoDateStr": "2026-08-17",
+      "dateStr": "17/8/2026",
+      "timeStr": "02:15",
+      "status": "En Preparación",
+      "assignedDriver": "",
+      "deliveredTimeStr": "",
+      "isSettled": false,
+      "settledDate": "",
+      "clientName": "asd",
+      "phone": "asda",
+      "address": "sadd",
+      "notes": "asda",
+      "paymentMethod": "Efectivo",
+      "items": [
+        {
+          "id": "h1",
+          "name": "Hamburguesa Clásica",
+          "description": "Carne, bacon, queso, cebolla caramelizada, tomate, lechuga, ensalada y salsa de la casa.",
+          "price": 6,
+          "quantity": 1
+        }
+      ],
+      "subtotal": 6,
+      "deliveryFee": 2,
+      "total": 8
+    },
+    {
       "id": "#PQ-709812",
       "timestamp": "2026-08-17T00:10:07.098Z",
       "isoDateStr": "2026-08-17",

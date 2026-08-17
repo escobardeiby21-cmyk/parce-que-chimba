@@ -975,25 +975,7 @@ Puedes seleccionar tus productos arriba en el menú interactivo, hacer clic en e
     // Guardar el pedido en la Nube y LocalStorage en tiempo real de forma inmediata
     saveOrdersToCloudAndLocal(updatedHistory, isBusinessOpen, true);
 
-    // Abrir automáticamente WhatsApp en una pestaña con el boleto listo para enviar
-    const waText = `*¡Hola! Quiero confirmar mi pedido en Que Chimba Parce*\n\n` +
-      `*Mis Datos:*\n` +
-      `👤 Nombre: ${newOrder.clientName}\n` +
-      `🏠 Dirección: ${newOrder.address}\n` +
-      `📱 Teléfono: ${newOrder.phone}\n` +
-      `💳 Método de Pago: ${newOrder.paymentMethod}\n` +
-      `${newOrder.notes ? `📝 Notas: ${newOrder.notes}\n` : ''}\n` +
-      `*Mi Pedido (${newOrder.id}):*\n` +
-      newOrder.items.map(i => `• ${i.quantity || 1}x ${i.name} (${((i.price || 0) * (i.quantity || 1)).toFixed(2)}€)`).join('\n') +
-      `\n\n*Subtotal:* ${newOrder.subtotal.toFixed(2)}€\n` +
-      `*🛵 Domicilio:* ${newOrder.deliveryFee.toFixed(2)}€\n` +
-      `*Total a pagar: ${newOrder.total.toFixed(2)}€*`;
-
-    try {
-      window.open(`https://wa.me/34603959537?text=${encodeURIComponent(waText)}`, '_blank');
-    } catch(e) {}
-
-    // Limpiar carrito e ingresar pedido a la vista flotante del cliente
+    // Limpiar carrito y mostrar primero la ventana flotante de confirmación en la web
     setCart([]);
     setIsCartOpen(false);
     setSubmittedOrderModal(newOrder);
